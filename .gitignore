@@ -1,0 +1,10 @@
+node_modules/
+.next/
+out/
+coverage/
+next-env.d.ts
+*.tsbuildinfo
+.env*.local
+.DS_Store
+# Configuration tarifaire enregistrée depuis /admin (données d'exécution)
+storage/
