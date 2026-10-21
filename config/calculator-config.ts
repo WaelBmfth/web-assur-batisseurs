@@ -8,8 +8,12 @@ export const localeConfig = {
 } as const;
 
 export const storageConfig = {
-  /** Fichier où l'administration enregistre la configuration tarifaire en vigueur. */
+  /** Fichier où l'administration enregistre la grille (sans Blob store : développement, serveur Node). */
   pricingConfigPath: process.env.PRICING_CONFIG_PATH ?? "storage/pricing-config.json",
+  /** Jeton fourni automatiquement par Vercel quand un Blob store est relié au projet. */
+  blobToken: process.env.BLOB_READ_WRITE_TOKEN,
+  /** Doit correspondre au type du Blob store créé sur Vercel (« private » par défaut). */
+  blobAccess: process.env.PRICING_BLOB_ACCESS === "public" ? "public" : "private",
 } as const;
 
 export const simulatorContent = {

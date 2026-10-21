@@ -42,7 +42,9 @@ Variables d'environnement (facultatives) :
 | --- | --- |
 | `ADMIN_PASSWORD` | Active l'authentification HTTP Basic sur `/admin` et sur l'écriture de l'API. **À définir avant toute mise en ligne.** |
 | `ADMIN_USER` | Identifiant associé (`admin` par défaut). |
-| `PRICING_CONFIG_PATH` | Fichier de stockage de la grille (`storage/pricing-config.json` par défaut). |
+| `BLOB_READ_WRITE_TOKEN` | Fourni automatiquement par Vercel quand un Blob store est relié au projet : la grille est alors stockée dans Vercel Blob. |
+| `PRICING_BLOB_ACCESS` | `private` (défaut) ou `public` : doit correspondre au type du Blob store créé. |
+| `PRICING_CONFIG_PATH` | Sans Blob store : fichier de stockage de la grille (`storage/pricing-config.json` par défaut). |
 
 ## Architecture
 
@@ -60,7 +62,8 @@ components/
   ui/                         Composants génériques (Button, Icon, Card, FormField, ChoiceCard…)
 lib/
   calculator/                 Moteur de calcul pur : calculateQuote + règles (pricingRules)
-  pricing/                    Schéma Zod, opérations d'édition, stockage (repository.server.ts), client API
+  pricing/                    Schéma Zod, opérations d'édition, dépôt (repository.server.ts), cache, client API
+  pricing/stores/             Supports de stockage : fichier JSON (local) et Vercel Blob (production)
   simulator/                  Schéma du formulaire et définition des étapes
   format.ts                   Formats monétaires français (1 704,00 €)
 data/pricing-data.ts          Grille initiale extraite de l'Excel
@@ -106,10 +109,17 @@ Le test `tests/calculator/excelParity.test.ts` vérifie les 27 activités et l'e
 
 - **Valeurs initiales** : `data/pricing-data.ts` (27 activités, tranches, minimums, bornes hautes, courtage 450 € / 250 €,
   PJ 296 €), extraites de l'Excel.
-- **Valeurs en vigueur** : `storage/pricing-config.json`, écrit par l'administration. Tant que ce fichier n'existe pas,
-  les valeurs initiales s'appliquent. Chaque enregistrement incrémente `version` et archive une copie dans
-  `storage/history/v{n}.json`.
-- Le dossier `storage/` est ignoré par git : ce sont des données d'exécution, pas du code.
+- **Valeurs en vigueur** : écrites par l'administration, dans l'un des deux supports :
+  - **Vercel Blob** (si `BLOB_READ_WRITE_TOKEN` est défini) : chaque enregistrement crée un fichier immuable
+    `pricing/v000002.json`, `pricing/v000003.json`… ; la version la plus élevée fait foi. Rien n'est jamais écrasé
+    (historique complet, pas de cache CDN périmé) et deux enregistrements simultanés sont refusés (« rechargez la page »)
+    au lieu de s'écraser ;
+  - **fichier local** sinon : `storage/pricing-config.json`, avec une copie de chaque version dans `storage/history/`.
+    Le dossier `storage/` est ignoré par git.
+- Tant que rien n'a été enregistré, les valeurs initiales s'appliquent. Chaque enregistrement incrémente `version`.
+- **Cache** : le simulateur lit la grille via le cache Next.js (`lib/pricing/cachedPricing.server.ts`), ce qui évite
+  une lecture du stockage à chaque visite. Le cache est invalidé à chaque enregistrement : la nouvelle grille
+  s'applique dès la visite suivante.
 
 Modèle (`types/pricing.ts`) :
 
@@ -154,9 +164,18 @@ En code : ajouter un objet `Activity` dans `data/pricing-data.ts` (identifiant u
 - **Frais & options** : courtage 1ère année / années suivantes, prix et disponibilité de la PJ, nombre d'échéances.
 - **Rétablir les valeurs Excel** : recrée une nouvelle version à partir de `data/pricing-data.ts`.
 - **Sécurité** : prototype protégé par mot de passe unique (`ADMIN_PASSWORD`). Un bandeau signale l'absence de protection.
-- **Stockage** : fichier JSON, adapté à un hébergement Node classique. Pour une plateforme serverless ou une base
-  de données, fournir une autre implémentation de l'interface `PricingRepository`
-  (`lib/pricing/repository.server.ts`) — le reste de l'application est inchangé.
+- **Stockage** : Vercel Blob en production, fichier JSON en local (voir [Tarification](#tarification)). Pour une base
+  de données, il suffit d'écrire un autre `PricingStore` (`lib/pricing/stores/types.ts` : `readLatest` + `write`) —
+  validation, versioning et cache restent inchangés.
+
+## Déploiement sur Vercel
+
+1. Importer le dépôt dans Vercel (Next.js est détecté, aucun réglage nécessaire).
+2. **Storage → Create → Blob** et relier le store au projet : Vercel ajoute `BLOB_READ_WRITE_TOKEN`.
+   Si le store est créé en accès public, ajouter `PRICING_BLOB_ACCESS=public`.
+3. **Settings → Environment Variables** : définir `ADMIN_PASSWORD` (et éventuellement `ADMIN_USER`).
+4. Redéployer. Sans Blob store, le simulateur fonctionne mais l'administration affiche
+   « Le serveur n'autorise pas l'écriture de fichiers… » à l'enregistrement.
 
 ## Intégration
 

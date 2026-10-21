@@ -38,7 +38,6 @@ est indiqué entre parenthèses : il peut être ajusté sans toucher aux composa
 
 - [ ] Qui modifiera la grille et faut-il des comptes nominatifs ?
   _(Actuel : protection par mot de passe unique via `ADMIN_PASSWORD`.)_
-- [ ] Hébergement prévu pour le futur site : serveur Node classique ou plateforme serverless (Vercel…) ? Dans le second cas, il faudra stocker la grille dans une base de données plutôt que dans un fichier.
 
 ## Parcours & design
 

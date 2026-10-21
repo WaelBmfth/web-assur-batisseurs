@@ -6,13 +6,13 @@ import { StrengthsSection } from "@/components/site/StrengthsSection";
 import { QuoteSimulator } from "@/components/simulator";
 import { getSelectableActivities } from "@/lib/calculator";
 import { formatEuro } from "@/lib/format";
-import { pricingRepository } from "@/lib/pricing/repository.server";
+import { loadPricingConfig } from "@/lib/pricing/cachedPricing.server";
 
-// La grille tarifaire peut être modifiée à tout moment depuis /admin : pas de cache.
+// Rendu à la demande ; la grille est lue via le cache Next.js, invalidé à chaque enregistrement admin.
 export const dynamic = "force-dynamic";
 
 export default async function SimulatorPage() {
-  const pricingConfig = await pricingRepository.load();
+  const pricingConfig = await loadPricingConfig();
 
   // Réponse FAQ « Combien coûte… » construite à partir de la grille en vigueur (jamais codée en dur).
   const minimums = getSelectableActivities(pricingConfig).flatMap((a) => a.brackets.map((b) => b.premiumMin));
