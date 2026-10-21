@@ -3,8 +3,8 @@
 Application **Next.js standalone** permettant d'estimer un budget d'assurance BTP à partir de l'activité,
 du chiffre d'affaires prévisionnel et de l'option Protection Juridique. Elle comprend :
 
-- le **simulateur** (`/`) en 5 étapes, avec fourchette basse / haute, total année 1, total années suivantes,
-  mensualité indicative et détail du calcul ;
+- le **simulateur** (`/`) : 4 étapes (activité, chiffre d'affaires, Protection Juridique, raison sociale) puis l'estimation,
+  avec fourchette basse / haute, total année 1, total années suivantes, mensualité indicative et détail du calcul ;
 - une **administration** (`/admin`) pour gérer minimums de prime, activités, tranches de CA et frais,
   sans modifier le code.
 
@@ -50,13 +50,14 @@ La séparation suit trois couches : **UI → logique métier → données tarifa
 
 ```
 app/
-  page.tsx                    Page du simulateur (charge la grille en vigueur côté serveur)
+  page.tsx                    Page du simulateur : en-tête, simulateur, atouts, FAQ, pied de page
   admin/page.tsx              Page d'administration
   api/pricing-config/         GET (public) / PUT (admin) de la grille, POST reset/ (valeurs Excel)
 components/
-  simulator/                  QuoteSimulator + étapes, PriceSummary, PriceBreakdown…
+  simulator/                  QuoteSimulator + étapes, ProgressBar, PriceSummary, PriceBreakdown…
+  site/                       Habillage du site (SiteHeader, SiteFooter, StrengthsSection, FaqSection, Logo)
   admin/                      MinimumPremiumManager, ActivityManager, BracketEditor, FeeSettings…
-  ui/                         Composants génériques (Button, Card, FormField, ChoiceCard…)
+  ui/                         Composants génériques (Button, Icon, Card, FormField, ChoiceCard…)
 lib/
   calculator/                 Moteur de calcul pur : calculateQuote + règles (pricingRules)
   pricing/                    Schéma Zod, opérations d'édition, stockage (repository.server.ts), client API
@@ -65,6 +66,8 @@ lib/
 data/pricing-data.ts          Grille initiale extraite de l'Excel
 types/                        Types TypeScript (pricing.ts, simulator.ts)
 config/calculator-config.ts   Paramètres non tarifaires (locale, textes, lien de contact, stockage)
+config/site-content.ts        Contenus du site : navigation, coordonnées, atouts, FAQ, liens du pied de page
+public/logo-assurbatisseurs.png  Logo
 tests/                        Tests Vitest (moteur, parité Excel, admin, stockage, formulaire)
 proxy.ts                      Protection de l'administration (Next.js 16 « proxy », ex-middleware)
 ```
@@ -177,7 +180,10 @@ export default async function DevisPage() {
 ```
 
 Props : `pricingConfig` (obligatoire), `contactHref`, `onQuote` (appelé à l'affichage de l'estimation),
-`hideSidebar` (masque le récapitulatif latéral pour une colonne étroite).
+`hideProgress` (masque la barre de progression pleine largeur).
+
+L'habillage (`components/site/`, `config/site-content.ts`) est indépendant du simulateur : le futur site peut
+garder le sien et n'importer que `<QuoteSimulator />`.
 
 Le moteur s'importe indépendamment (API, back-office, tests) :
 
@@ -187,17 +193,22 @@ const result = calculateQuote({ activityId: "plomberie-seul", revenue: 150_000, 
 ```
 
 Pour intégrer : copier `components/`, `lib/`, `types/`, `data/`, `config/` et les tokens `@theme` de
-`app/globals.css` (Tailwind CSS v4), ajouter les dépendances `zod`, `react-hook-form`, `@hookform/resolvers`.
+`app/globals.css` (Tailwind CSS v4), ajouter les dépendances `zod`, `react-hook-form`, `@hookform/resolvers`,
+et les polices Archivo / Jost (`next/font/google`, voir `app/layout.tsx`).
 
 ## Design
 
-La maquette Claude Design de référence n'était pas accessible depuis l'environnement de développement
-(lien protégé par authentification). L'interface a été construite à partir du cahier des charges et de l'identité
-de l'Excel (bleu marine `#1F4E79`). Toutes les couleurs, rayons et ombres sont centralisés dans les tokens de
-`app/globals.css` pour s'aligner rapidement sur la maquette.
+L'interface reprend la maquette AssurBâtisseurs : en-tête noir avec logo doré, barre de progression avec pourcentage,
+une question par étape (sur-titre « Étape n · … », titre bicolore, bouton doré « Suivant »), section « Nos atouts »,
+FAQ en accordéon et pied de page noir. Couleurs relevées sur la maquette (or `#C8A54D`, titres `#866835`,
+crème `#F6EFE4`), centralisées dans les tokens de `app/globals.css`. Typographies : Archivo (titres), Jost (texte).
+
+Les contenus manquants dans la maquette (réponses de FAQ, e-mail) sont affichés « [À compléter : …] » comme dans
+la maquette, et listés dans `CLIENT_QUESTIONS.md`. La réponse « Combien coûte… » est calculée à partir de la grille
+en vigueur (minimum de prime le plus bas), jamais écrite en dur.
 
 ## Accessibilité
 
-Labels associés à chaque champ, erreurs reliées par `aria-describedby` et annoncées (`role="alert"`),
+Labels associés à chaque champ (y compris la liste des activités), erreurs reliées par `aria-describedby` et annoncées (`role="alert"`),
 groupes de choix en `fieldset`/`legend`, navigation clavier complète, focus visible, focus déplacé sur le titre
-à chaque changement d'étape, `aria-current="step"` sur l'étape active, contrastes conformes.
+à chaque changement d'étape, barre de progression `role="progressbar"`, FAQ en `<details>` natifs, menu clavier (Échap pour fermer), contrastes conformes.

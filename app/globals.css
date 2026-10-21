@@ -2,34 +2,39 @@
 
 /*
  * Design tokens du simulateur.
- * Palette : bleu marine institutionnel (repris de l'en-tête de l'Excel, #1F4E79)
- * et accent ambre « chantier ». Toute l'UI référence ces tokens via les
- * utilitaires Tailwind (bg-brand-700, text-ink-muted, …).
+ * Palette reprise de la maquette AssurBâtisseurs : noir, or et crème.
+ * Toute l'UI référence ces tokens via les utilitaires Tailwind
+ * (bg-gold-500, text-ink-muted, …).
  */
 @theme {
-  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-sans: var(--font-body), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  --font-display: var(--font-heading), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
 
-  --color-brand-950: #0b1f33;
-  --color-brand-900: #102b46;
-  --color-brand-800: #16395c;
-  --color-brand-700: #1f4e79;
-  --color-brand-600: #28649a;
-  --color-brand-500: #3a7cb8;
-  --color-brand-200: #c9d8ea;
-  --color-brand-100: #e8eef5;
-  --color-brand-50: #f4f7fb;
+  /* Or AssurBâtisseurs (bouton #C8A54D, titres #866835, pastilles #F6EFE4) */
+  --color-gold-50: #fbf8f1;
+  --color-gold-100: #f6efe4;
+  --color-gold-200: #ecdcb8;
+  --color-gold-300: #dfc58a;
+  --color-gold-400: #d6b562;
+  --color-gold-500: #c8a54d;
+  --color-gold-600: #a9883a;
+  --color-gold-700: #866835;
+  --color-gold-800: #6b5229;
+  --color-gold-900: #4a3818;
+  --color-gold-950: #2a1f0c;
 
   --color-accent-600: #c97a06;
   --color-accent-500: #f0a020;
   --color-accent-400: #f6b74a;
   --color-accent-100: #fdf0d9;
 
-  --color-ink: #0f1d2c;
-  --color-ink-muted: #51627a;
-  --color-ink-subtle: #7a889b;
-  --color-line: #dbe3ec;
+  --color-ink: #0a0a0a;
+  --color-ink-soft: #262626;
+  --color-ink-muted: #56524b;
+  --color-ink-subtle: #8a857c;
+  --color-line: #e7e2d8;
   --color-surface: #ffffff;
-  --color-canvas: #f3f6fa;
+  --color-canvas: #f8f7f5;
 
   --color-success-700: #19734a;
   --color-success-100: #e3f4ec;
@@ -38,9 +43,9 @@
   --color-warning-800: #8a5300;
   --color-warning-100: #fff4e0;
 
-  --radius-card: 1.25rem;
-  --shadow-card: 0 1px 2px rgb(15 29 44 / 0.04), 0 8px 24px -12px rgb(15 29 44 / 0.12);
-  --shadow-raised: 0 2px 4px rgb(15 29 44 / 0.06), 0 18px 40px -18px rgb(16 43 70 / 0.35);
+  --radius-card: 0.875rem;
+  --shadow-card: 0 1px 2px rgb(10 10 10 / 0.04), 0 10px 30px -18px rgb(10 10 10 / 0.18);
+  --shadow-raised: 0 2px 4px rgb(10 10 10 / 0.08), 0 24px 48px -24px rgb(10 10 10 / 0.45);
 }
 
 @layer base {
@@ -53,9 +58,17 @@
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
   }
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+  }
   :focus-visible {
-    outline: 3px solid var(--color-accent-500);
+    outline: 3px solid var(--color-gold-700);
     outline-offset: 2px;
+  }
+  .on-dark :focus-visible {
+    outline-color: var(--color-gold-400);
   }
   .tabular {
     font-variant-numeric: tabular-nums;

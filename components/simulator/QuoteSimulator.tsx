@@ -3,22 +3,23 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
+import { SectionHeading } from "@/components/site/SectionHeading";
 import { Button } from "@/components/ui/Button";
-import { Card } from "@/components/ui/Card";
+import { ArrowBadge, Icon } from "@/components/ui/Icon";
 import { simulatorContent } from "@/config/calculator-config";
 import { calculateQuote, getSelectableActivities } from "@/lib/calculator";
+import { cn } from "@/lib/cn";
 import { parseAmount } from "@/lib/format";
 import { emptySimulatorForm, simulatorFormSchema, type SimulatorFormValues } from "@/lib/simulator/formSchema";
-import { simulatorSteps } from "@/lib/simulator/steps";
+import { inputStepCount, simulatorSteps } from "@/lib/simulator/steps";
 import type { PricingConfig } from "@/types/pricing";
 import type { QuoteResult } from "@/types/simulator";
 import { CompanyInfoStep } from "./CompanyInfoStep";
-import { LiveEstimate } from "./LiveEstimate";
 import { ProfileSelector } from "./ProfileSelector";
+import { ProgressBar } from "./ProgressBar";
 import { ProtectionJuridique } from "./ProtectionJuridique";
 import { QuoteResultView } from "./QuoteResultView";
 import { RevenueInput } from "./RevenueInput";
-import { Stepper } from "./Stepper";
 
 export type QuoteSubmission = {
   values: SimulatorFormValues;
@@ -31,8 +32,8 @@ export type QuoteSimulatorProps = {
   /** Appelé quand l'utilisateur affiche son estimation (ex. : enregistrement d'un lead). */
   onQuote?: (submission: QuoteSubmission) => void;
   contactHref?: string;
-  /** Masque le récapitulatif latéral (intégration dans une colonne étroite). */
-  hideSidebar?: boolean;
+  /** Masque la barre de progression pleine largeur (intégration dans un bloc existant). */
+  hideProgress?: boolean;
 };
 
 const RESULT_STEP = simulatorSteps.length - 1;
@@ -46,10 +47,10 @@ export function QuoteSimulator({
   pricingConfig,
   onQuote,
   contactHref = simulatorContent.contactHref,
-  hideSidebar = false,
+  hideProgress = false,
 }: QuoteSimulatorProps) {
   const [stepIndex, setStepIndex] = useState(0);
-  const headingRef = useRef<HTMLHeadingElement>(null);
+  const headingRef = useRef<HTMLDivElement>(null);
   const hasNavigated = useRef(false);
 
   const {
@@ -63,7 +64,8 @@ export function QuoteSimulator({
   } = useForm<SimulatorFormValues>({
     resolver: zodResolver(simulatorFormSchema),
     defaultValues: emptySimulatorForm,
-    mode: "onTouched",
+    // Revalidation immédiate : l'erreur disparaît dès la correction (pas de décalage du bouton au clic).
+    mode: "onChange",
   });
   const values = useWatch({ control }) as SimulatorFormValues;
 
@@ -82,7 +84,7 @@ export function QuoteSimulator({
   // Accessibilité : le focus suit le titre de l'étape affichée.
   useEffect(() => {
     if (!hasNavigated.current) return;
-    headingRef.current?.focus();
+    headingRef.current?.querySelector("h1")?.focus();
   }, [stepIndex]);
 
   function goTo(index: number) {
@@ -91,9 +93,8 @@ export function QuoteSimulator({
   }
 
   const step = simulatorSteps[stepIndex]!;
+  const isResult = step.id === "result";
   const isLastInput = stepIndex === RESULT_STEP - 1;
-  // Sur l'étape résultat, le récapitulatif latéral ferait doublon : le résultat prend toute la largeur.
-  const withSidebar = !hideSidebar && step.id !== "result";
 
   async function next() {
     if (!(await trigger(step.fields, { shouldFocus: true }))) return;
@@ -101,9 +102,12 @@ export function QuoteSimulator({
   }
 
   function showResult(submitted: SimulatorFormValues) {
-    const parsed = parseAmount(submitted.revenue);
     const result = calculateQuote(
-      { activityId: submitted.activityId, revenue: parsed, includeLegalProtection: submitted.legalProtection === "yes" },
+      {
+        activityId: submitted.activityId,
+        revenue: parseAmount(submitted.revenue),
+        includeLegalProtection: submitted.legalProtection === "yes",
+      },
       pricingConfig,
     );
     onQuote?.({ values: submitted, quote: result });
@@ -116,34 +120,31 @@ export function QuoteSimulator({
   }
 
   return (
-    <div className={withSidebar ? "grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]" : ""}>
-      <Card className="p-5 sm:p-8">
-        <Stepper steps={simulatorSteps} currentIndex={stepIndex} onSelect={goTo} />
+    <div>
+      {!hideProgress && <ProgressBar percent={(stepIndex / inputStepCount) * 100} label="Progression de la simulation" />}
 
-        <form
-          noValidate
-          onSubmit={(event) => {
-            event.preventDefault();
-            if (isLastInput) void handleSubmit(showResult)();
-            else void next();
-          }}
-          className="mt-8"
-        >
-          <div className="mb-6">
-            <h2 ref={headingRef} tabIndex={-1} className="text-2xl font-bold tracking-tight text-ink focus:outline-none sm:text-[1.75rem]">
-              {step.title}
-            </h2>
-            {step.description && <p className="mt-1.5 text-ink-muted">{step.description}</p>}
-          </div>
+      <form
+        noValidate
+        onSubmit={(event) => {
+          event.preventDefault();
+          if (isLastInput) void handleSubmit(showResult)();
+          else void next();
+        }}
+        className="mx-auto max-w-[64rem] px-4 py-14 sm:px-6 sm:py-20"
+      >
+        <div ref={headingRef}>
+          <SectionHeading
+            as="h1"
+            eyebrow={isResult ? step.label : `Étape ${stepIndex + 1} · ${step.label}`}
+            title={step.title}
+            highlight={step.highlight}
+          />
+        </div>
+        {step.description && <p className="mt-5 text-center text-[1.05rem] text-ink-muted">{step.description}</p>}
 
-          {step.id === "company" && <CompanyInfoStep register={register} error={errors.companyName?.message} />}
+        <div className={cn("mx-auto", isResult ? "mt-12" : "mt-10 max-w-[36rem]")}>
           {step.id === "activity" && (
-            <ProfileSelector
-              activities={activities}
-              register={register}
-              selectedId={values.activityId}
-              error={errors.activityId?.message}
-            />
+            <ProfileSelector activities={activities} register={register} selected={selectedActivity} error={errors.activityId?.message} />
           )}
           {step.id === "revenue" && (
             <RevenueInput
@@ -155,13 +156,10 @@ export function QuoteSimulator({
             />
           )}
           {step.id === "options" && (
-            <ProtectionJuridique
-              register={register}
-              settings={pricingConfig.legalProtection}
-              error={errors.legalProtection?.message}
-            />
+            <ProtectionJuridique register={register} settings={pricingConfig.legalProtection} error={errors.legalProtection?.message} />
           )}
-          {step.id === "result" && (
+          {step.id === "company" && <CompanyInfoStep register={register} error={errors.companyName?.message} />}
+          {isResult && (
             <QuoteResultView
               companyName={values.companyName}
               quote={quote}
@@ -171,36 +169,33 @@ export function QuoteSimulator({
               onRestart={restart}
             />
           )}
+        </div>
 
-          {step.id !== "result" && (
-            <div className="mt-8 flex flex-col-reverse gap-3 border-t border-line pt-6 sm:flex-row sm:items-center sm:justify-between">
+        {!isResult && (
+          <div className="mx-auto max-w-[36rem]">
+            <Button type="submit" size="lg" className="mt-6 w-full">
+              {isLastInput ? "Voir mon estimation" : "Suivant"}
+              <ArrowBadge />
+            </Button>
+            <div className="mt-4 flex items-center justify-between gap-4 text-xs text-ink-muted">
               {stepIndex > 0 ? (
-                <Button variant="ghost" onClick={() => goTo(stepIndex - 1)}>
-                  <span aria-hidden="true">←</span> Précédent
-                </Button>
+                <button
+                  type="button"
+                  onClick={() => goTo(stepIndex - 1)}
+                  className="flex items-center gap-1.5 rounded font-semibold text-ink hover:text-gold-700"
+                >
+                  <Icon name="arrowLeft" className="size-3.5" /> Précédent
+                </button>
               ) : (
-                <span className="hidden sm:block" />
+                <span />
               )}
-              <Button type="submit" variant={isLastInput ? "accent" : "primary"} size="lg" className="w-full sm:w-auto">
-                {isLastInput ? "Voir mon estimation" : "Continuer"} <span aria-hidden="true">→</span>
-              </Button>
+              <p>
+                Étape {stepIndex + 1} sur {inputStepCount} · Sans engagement
+              </p>
             </div>
-          )}
-        </form>
-      </Card>
-
-      {withSidebar && (
-        <aside className="hidden lg:sticky lg:top-6 lg:block" aria-label="Récapitulatif">
-          <LiveEstimate
-            companyName={values.companyName ?? ""}
-            activityName={selectedActivity?.name}
-            revenue={revenue}
-            legalProtection={values.legalProtection}
-            legalProtectionAvailable={pricingConfig.legalProtection.enabled}
-            quote={quote}
-          />
-        </aside>
-      )}
+          </div>
+        )}
+      </form>
     </div>
   );
 }

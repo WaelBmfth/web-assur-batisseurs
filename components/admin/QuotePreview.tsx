@@ -43,10 +43,10 @@ export function QuotePreview({ draft }: { draft: PricingConfig }) {
         <input id="preview-revenue" inputMode="decimal" value={revenue} onChange={(e) => setRevenue(e.target.value)} className={`${inputClasses} py-2 text-sm`} />
       </div>
       <label className="flex items-center gap-2 text-sm text-ink">
-        <input type="checkbox" checked={withLp} onChange={(e) => setWithLp(e.target.checked)} className="size-4 accent-brand-700" />
+        <input type="checkbox" checked={withLp} onChange={(e) => setWithLp(e.target.checked)} className="size-4 accent-gold-700" />
         Inclure la Protection Juridique
       </label>
-      <div className="tabular rounded-xl bg-brand-50 p-4 text-sm" aria-live="polite">
+      <div className="tabular rounded-xl bg-gold-50 p-4 text-sm" aria-live="polite">
         {quote.ok ? (
           <dl className="flex flex-col gap-1.5">
             <div className="flex justify-between gap-2">
@@ -55,7 +55,7 @@ export function QuotePreview({ draft }: { draft: PricingConfig }) {
             </div>
             <div className="flex justify-between gap-2">
               <dt className="whitespace-nowrap text-ink-muted">Total an 1</dt>
-              <dd className="text-right font-bold text-brand-800">{formatEuroRange(quote.year1.total.min, quote.year1.total.max)}</dd>
+              <dd className="text-right font-bold text-gold-800">{formatEuroRange(quote.year1.total.min, quote.year1.total.max)}</dd>
             </div>
             <div className="flex justify-between gap-2">
               <dt className="whitespace-nowrap text-ink-muted">Total an 2+</dt>

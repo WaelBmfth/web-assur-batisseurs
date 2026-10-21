@@ -122,7 +122,7 @@ export function AdminDashboard({ initialConfig, isProtected }: { initialConfig: 
             onClick={() => setTab(t.id)}
             className={cn(
               "flex-1 rounded-xl px-4 py-2.5 text-sm font-semibold whitespace-nowrap transition-colors",
-              tab === t.id ? "bg-brand-700 text-white" : "text-ink-muted hover:bg-brand-50 hover:text-brand-800",
+              tab === t.id ? "bg-ink text-white" : "text-ink-muted hover:bg-gold-50 hover:text-ink",
             )}
           >
             {t.label}

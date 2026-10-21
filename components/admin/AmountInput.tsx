@@ -71,8 +71,8 @@ export function AmountInput({
           onBlur={() => !invalid && setText(display(value))}
           className={cn(
             "tabular w-full rounded-lg border bg-surface py-2 pr-8 pl-3 text-right text-sm font-semibold text-ink transition-colors",
-            "focus:border-brand-600 focus:ring-4 focus:ring-brand-100 focus:outline-none focus-visible:outline-none",
-            invalid ? "border-danger-700" : changed ? "border-accent-500 bg-accent-100/50" : "border-line hover:border-brand-200",
+            "focus:border-gold-600 focus:ring-4 focus:ring-gold-100 focus:outline-none focus-visible:outline-none",
+            invalid ? "border-danger-700" : changed ? "border-accent-500 bg-accent-100/50" : "border-line hover:border-gold-200",
           )}
         />
         <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-xs text-ink-subtle">{suffix}</span>

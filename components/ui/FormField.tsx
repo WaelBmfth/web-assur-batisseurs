@@ -13,19 +13,22 @@ type FormFieldProps = {
   hint?: ReactNode;
   error?: string;
   required?: boolean;
+  /** Masque visuellement le libellé (il reste associé au champ). */
+  hideLabel?: boolean;
+  hintClassName?: string;
   className?: string;
   children: (control: FieldControlProps) => ReactNode;
 };
 
 /** Champ de formulaire accessible : label associé, aide et message d'erreur reliés via aria-describedby. */
-export function FormField({ id, label, hint, error, required, className, children }: FormFieldProps) {
+export function FormField({ id, label, hint, error, required, hideLabel, hintClassName, className, children }: FormFieldProps) {
   const hintId = hint ? `${id}-hint` : undefined;
   const errorId = error ? `${id}-error` : undefined;
   const describedBy = [hintId, errorId].filter(Boolean).join(" ") || undefined;
 
   return (
     <div className={cn("flex flex-col gap-2", className)}>
-      <label htmlFor={id} className="text-sm font-semibold text-ink">
+      <label htmlFor={id} className={hideLabel ? "sr-only" : "text-sm font-semibold text-ink"}>
         {label}
         {required && (
           <span className="ml-0.5 text-danger-700" aria-hidden="true">
@@ -35,7 +38,7 @@ export function FormField({ id, label, hint, error, required, className, childre
       </label>
       {children({ id, "aria-describedby": describedBy, "aria-invalid": error ? true : undefined })}
       {hint && (
-        <p id={hintId} className="text-sm text-ink-muted">
+        <p id={hintId} className={cn("text-sm text-ink-muted", hintClassName)}>
           {hint}
         </p>
       )}

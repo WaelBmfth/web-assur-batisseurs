@@ -9,7 +9,7 @@ type TextInputProps = InputHTMLAttributes<HTMLInputElement> & {
 };
 
 export const inputClasses =
-  "w-full rounded-xl border border-line bg-surface px-4 py-3 text-base text-ink placeholder:text-ink-subtle shadow-xs transition-colors hover:border-brand-200 focus:border-brand-600 focus:outline-none focus-visible:outline-none focus:ring-4 focus:ring-brand-100 aria-[invalid=true]:border-danger-700 aria-[invalid=true]:focus:ring-danger-100 disabled:bg-canvas";
+  "w-full rounded-md border border-[#d6d1c7] bg-surface px-4 py-3.5 text-base text-ink placeholder:text-ink-subtle transition-colors hover:border-gold-400 focus:border-gold-600 focus:outline-none focus-visible:outline-none focus:ring-4 focus:ring-gold-100 aria-[invalid=true]:border-danger-700 aria-[invalid=true]:focus:ring-danger-100 disabled:bg-canvas";
 
 export function TextInput({ className, suffix, leading, ref, ...props }: TextInputProps) {
   return (

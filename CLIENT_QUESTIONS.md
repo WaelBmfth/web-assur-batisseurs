@@ -44,4 +44,9 @@ est indiqué entre parenthèses : il peut être ajusté sans toucher aux composa
 
 - [ ] Que faire des informations saisies (raison sociale, activité, CA) : envoi par e-mail, CRM, formulaire de rappel ? Faut-il collecter e-mail / téléphone ?
   _(Actuel : aucune donnée n'est transmise ; le bouton « Demander une étude personnalisée » ouvre un `mailto:` provisoire défini dans `config/calculator-config.ts`.)_
-- [ ] La maquette Claude Design (« Simulateur Devis ») n'était pas accessible depuis l'environnement de développement (accès restreint). Pouvez-vous fournir un export HTML / des captures pour aligner finement l'interface ?
+- [ ] Réponses de la FAQ à fournir : « Quels documents fournir pour obtenir un devis ? », « Suis-je couvert si je crée mon entreprise sans chantier réalisé ? », « En combien de temps reçoit-on son attestation ? ».
+  _(Actuel : affichées « [À compléter : réponse] ». La réponse sur le coût est générée à partir de la grille.)_
+- [ ] Adresse e-mail de contact à afficher dans le pied de page (« [À compléter : e-mail] » sur la maquette).
+- [ ] Destinations des liens du menu et du pied de page (pages « Nos assurances », « Agents et courtiers », « À propos », mentions légales…) : pages du futur site ?
+  _(Actuel : liens « # » centralisés dans `config/site-content.ts`. Le bouton « Demander mon étude décennale » ramène au simulateur.)_
+- [ ] Ordre des étapes : la maquette commence par l'activité (« Étape 1 sur 4 »). La raison sociale est demandée en dernière étape, avant l'estimation : est-ce le bon choix, et faut-il aussi demander e-mail / téléphone à ce moment ?

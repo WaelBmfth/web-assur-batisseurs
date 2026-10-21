@@ -57,8 +57,8 @@ export function PriceBreakdown({ quote }: { quote: QuoteSuccess }) {
   ];
 
   return (
-    <section aria-labelledby="breakdown-title" className="rounded-[var(--radius-card)] border border-line bg-surface">
-      <h3 id="breakdown-title" className="border-b border-line px-5 py-4 text-base font-bold text-ink sm:px-6">
+    <section aria-labelledby="breakdown-title" className="rounded-2xl border border-line bg-surface">
+      <h3 id="breakdown-title" className="border-b border-line px-5 py-5 text-lg font-bold text-ink sm:px-6">
         Détail du calcul
       </h3>
       <table className="tabular w-full table-fixed text-sm">
@@ -81,15 +81,15 @@ export function PriceBreakdown({ quote }: { quote: QuoteSuccess }) {
         </thead>
         <tbody>
           {rows.map((row) => (
-            <tr key={row.label} className={cn("border-t border-line align-top", row.strong && "bg-brand-50")}>
+            <tr key={row.label} className={cn("border-t border-line align-top", row.strong && "bg-gold-50")}>
               <th scope="row" className="py-3.5 pr-2 pl-4 text-left font-normal sm:px-6">
                 <span className={cn("block text-ink", row.strong ? "font-bold" : "font-semibold")}>{row.label}</span>
                 {row.detail && <span className="mt-0.5 block text-xs break-words text-ink-muted">{row.detail}</span>}
               </th>
-              <td className={cn("px-2 py-3.5 text-right", row.strong ? "font-bold text-brand-800" : "text-ink")}>
+              <td className={cn("px-2 py-3.5 text-right", row.strong ? "font-bold text-gold-700" : "text-ink")}>
                 {row.year1}
               </td>
-              <td className={cn("py-3.5 pr-4 pl-2 text-right sm:pr-6", row.strong ? "font-bold text-brand-800" : "text-ink")}>
+              <td className={cn("py-3.5 pr-4 pl-2 text-right sm:pr-6", row.strong ? "font-bold text-gold-700" : "text-ink")}>
                 {row.following}
               </td>
             </tr>

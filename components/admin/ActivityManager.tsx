@@ -47,7 +47,7 @@ export function ActivityManager({ draft, onChange }: Props) {
         </p>
       </div>
 
-      <form onSubmit={create} className="grid gap-3 rounded-2xl border border-dashed border-brand-200 bg-brand-50/60 p-4 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
+      <form onSubmit={create} className="grid gap-3 rounded-2xl border border-dashed border-gold-200 bg-gold-50/60 p-4 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
         <div className="flex flex-col gap-1">
           <label htmlFor="new-activity-name" className="text-xs font-semibold text-ink-muted">
             Nouvelle activité
@@ -88,7 +88,7 @@ export function ActivityManager({ draft, onChange }: Props) {
                 <div className="flex flex-col">
                   <button
                     type="button"
-                    className="rounded px-1 text-ink-muted hover:bg-brand-50 hover:text-brand-700 disabled:opacity-30"
+                    className="rounded px-1 text-ink-muted hover:bg-gold-50 hover:text-gold-700 disabled:opacity-30"
                     disabled={index === 0}
                     onClick={() => onChange(moveActivity(draft, activity.id, "up"))}
                     aria-label={`Monter « ${activity.name} »`}
@@ -97,7 +97,7 @@ export function ActivityManager({ draft, onChange }: Props) {
                   </button>
                   <button
                     type="button"
-                    className="rounded px-1 text-ink-muted hover:bg-brand-50 hover:text-brand-700 disabled:opacity-30"
+                    className="rounded px-1 text-ink-muted hover:bg-gold-50 hover:text-gold-700 disabled:opacity-30"
                     disabled={index === activities.length - 1}
                     onClick={() => onChange(moveActivity(draft, activity.id, "down"))}
                     aria-label={`Descendre « ${activity.name} »`}

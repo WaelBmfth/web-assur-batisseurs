@@ -13,9 +13,6 @@ export const storageConfig = {
 } as const;
 
 export const simulatorContent = {
-  title: "Estimez votre assurance BTP en 2 minutes",
-  subtitle:
-    "Responsabilité civile & décennale pour les artisans et professionnels de la conception. Obtenez une fourchette de budget indicative, sans engagement.",
   disclaimer:
     "Estimation indicative et non contractuelle, établie à partir de notre grille tarifaire en vigueur. Le tarif définitif dépend de l'étude de votre dossier par nos équipes.",
   contactLabel: "Demander une étude personnalisée",
