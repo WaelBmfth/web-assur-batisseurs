@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { Icon, type IconName } from "@/components/ui/Icon";
 import { contact, footerColumns, legalLinks } from "@/config/site-content";
 import { Logo } from "./Logo";
-import { ToComplete } from "./FaqSection";
+import { ToComplete } from "./ToComplete";
 
 function ContactItem({ icon, title, children }: { icon: IconName; title: string; children: ReactNode }) {
   return (

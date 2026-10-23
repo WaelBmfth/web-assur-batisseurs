@@ -111,19 +111,86 @@ export const strengths: { icon: IconName; title: string; text: string }[] = [
   },
 ];
 
+/** Réponse de FAQ : texte simple, ou liste structurée (pièces à fournir). */
+export type FaqAnswer =
+  | { kind: "text"; text: string }
+  | { kind: "steps"; intro: string; steps: { title: string; items?: string[] }[] };
+
+export type FaqItem = { id: string; question: string; answer: FaqAnswer };
+
 /**
- * FAQ. `answer: null` = réponse à fournir par la cliente (affichée comme « À compléter »).
- * La réponse sur le coût est construite à partir de la grille tarifaire (voir FaqSection).
+ * FAQ (contenu validé par la cliente). Source unique : l'accordéon et le
+ * balisage FAQPage (JSON-LD) sont générés à partir de ce tableau.
+ * Les espaces insécables (avant « ? : », entre nombre et « € » / « h ») sont
+ * ajoutés à l'affichage : écrire ici des espaces normales.
  */
-export const faq: { id: string; question: string; answer: string | null }[] = [
+export const faq: FaqItem[] = [
   {
     id: "obligation",
     question: "L'assurance décennale est-elle obligatoire pour mon activité ?",
-    answer:
-      "Oui, pour tout professionnel qui participe à la construction d'un ouvrage : artisans, entreprises du bâtiment, maîtres d'œuvre ou bureaux d'études. Elle doit être souscrite avant l'ouverture du chantier.",
+    answer: {
+      kind: "text",
+      text: "Oui, pour tout professionnel qui participe à la construction d'un ouvrage : artisans, entreprises du bâtiment, maîtres d'œuvre ou bureaux d'études. Elle doit être souscrite avant l'ouverture du chantier.",
+    },
   },
-  { id: "cost", question: "Combien coûte une assurance décennale pour un artisan du BTP ?", answer: null },
-  { id: "documents", question: "Quels documents fournir pour obtenir un devis ?", answer: null },
-  { id: "new-company", question: "Suis-je couvert si je crée mon entreprise sans chantier réalisé ?", answer: null },
-  { id: "attestation", question: "En combien de temps reçoit-on son attestation ?", answer: null },
+  {
+    id: "cost",
+    question: "Combien coûte une assurance décennale pour un artisan du BTP ?",
+    answer: {
+      kind: "text",
+      text: "Le tarif dépend de votre activité, de votre chiffre d'affaires et de votre effectif. Sur notre grille actuelle, la prime d'assurance démarre à 740 € TTC par an (soit moins de 62 € / mois), hors frais de courtage et options. Le simulateur ci-dessus vous donne une fourchette personnalisée en 2 minutes.",
+    },
+  },
+  {
+    id: "documents",
+    question: "Quels documents fournir pour obtenir un devis ?",
+    answer: {
+      kind: "steps",
+      intro:
+        "Juste un relevé de sinistralité et l'attestation en cours (si assuré). Pour la souscription, voici la liste des pièces à fournir :",
+      steps: [
+        {
+          title: "Un document prouvant l'existence de votre entreprise :",
+          items: [
+            "Un extrait K-bis de moins de 3 mois si l'entreprise est immatriculée au Registre du Commerce et des Sociétés (RCS)",
+            "Un extrait D1 ou immatriculation au Répertoire des Métiers (si artisan)",
+            "L'avis de situation INSEE (SIREN/SIRET)",
+            "Une facture vierge de votre entreprise (souvent demandée pour vérifier les mentions légales obligatoires, dont le numéro d'assurance ou le statut)",
+          ],
+        },
+        {
+          title: "Justificatifs d'expérience professionnelle :",
+          items: [
+            "Certificats de travail dans le métier concerné (2 ans pour le second œuvre et 3 ans pour le gros œuvre)",
+            "Bulletins de salaire sur plusieurs années",
+            "Attestations d'emploi ou détails de missions antérieures",
+            "Diplômes",
+            "L'ancienne attestation d'assurance décennale (si déjà assuré)",
+            "CV du gérant",
+            "Pièce d'identité du gérant",
+            "Certifications professionnelles",
+          ],
+        },
+        { title: "Relevé de sinistralité et attestation précédente" },
+        { title: "RIB et mandat de paiement" },
+        { title: "Devis et pièces obligatoires signées" },
+      ],
+    },
+  },
+  {
+    id: "new-company",
+    question: "Suis-je couvert si je crée mon entreprise sans chantier réalisé ?",
+    answer: {
+      kind: "text",
+      text: "Oui, car la responsabilité civile professionnelle vous couvre dès l'édition de votre attestation, même lors de vos échanges commerciaux et devis.",
+    },
+  },
+  {
+    id: "attestation",
+    question: "En combien de temps reçoit-on son attestation ?",
+    answer: {
+      kind: "text",
+      text: "Vous pouvez recevoir votre attestation sous 48 h, après la fourniture de toutes les pièces contractuelles (hors période d'échéances).",
+    },
+  },
 ];

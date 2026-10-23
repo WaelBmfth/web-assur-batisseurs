@@ -256,12 +256,12 @@ une question par étape (sur-titre « Étape n · … », titre bicolore, bouton
 FAQ en accordéon et pied de page noir. Couleurs relevées sur la maquette (or `#C8A54D`, titres `#866835`,
 crème `#F6EFE4`), centralisées dans les tokens de `app/globals.css`. Typographies : Archivo (titres), Jost (texte).
 
-Les contenus manquants dans la maquette (réponses de FAQ, e-mail) sont affichés « [À compléter : …] » comme dans
-la maquette, et listés dans `CLIENT_QUESTIONS.md`. La réponse « Combien coûte… » est calculée à partir de la grille
-en vigueur (minimum de prime le plus bas), jamais écrite en dur.
+La FAQ (contenu validé par la cliente) est un tableau typé dans `config/site-content.ts` : l'accordéon et le
+balisage schema.org `FAQPage` (JSON-LD) en sont générés. L'e-mail du pied de page, absent de la maquette, est
+affiché « [À compléter : e-mail] » et listé dans `CLIENT_QUESTIONS.md`.
 
 ## Accessibilité
 
 Labels associés à chaque champ (y compris la liste des activités), erreurs reliées par `aria-describedby` et annoncées (`role="alert"`),
 groupes de choix en `fieldset`/`legend`, navigation clavier complète, focus visible, focus déplacé sur le titre
-à chaque changement d'étape, barre de progression `role="progressbar"`, FAQ en `<details>` natifs, menu clavier (Échap pour fermer), contrastes conformes.
+à chaque changement d'étape, barre de progression `role="progressbar"`, FAQ en accordéon (boutons `aria-expanded` / `aria-controls`, panneaux `role="region"`), menu clavier (Échap pour fermer), contrastes conformes.
