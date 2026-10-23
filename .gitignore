@@ -8,3 +8,6 @@ next-env.d.ts
 .DS_Store
 # Configuration tarifaire enregistrée depuis /admin (données d'exécution)
 storage/
+
+# Généré automatiquement par `next dev` (Next.js 16)
+AGENTS.md
