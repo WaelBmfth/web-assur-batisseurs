@@ -6,10 +6,11 @@ import { useForm, useWatch } from "react-hook-form";
 import { SectionHeading } from "@/components/site/SectionHeading";
 import { Button } from "@/components/ui/Button";
 import { ArrowBadge, Icon } from "@/components/ui/Icon";
-import { simulatorContent } from "@/config/calculator-config";
 import { calculateQuote, getSelectableActivities } from "@/lib/calculator";
 import { cn } from "@/lib/cn";
 import { parseAmount } from "@/lib/format";
+import { buildStudyRequestHref, STUDY_REQUEST_PATH } from "@/lib/questionnaires/simulatorSnapshot";
+import type { SimulatorSnapshot } from "@/lib/questionnaires/types";
 import { emptySimulatorForm, simulatorFormSchema, type SimulatorFormValues } from "@/lib/simulator/formSchema";
 import { inputStepCount, simulatorSteps } from "@/lib/simulator/steps";
 import type { PricingConfig } from "@/types/pricing";
@@ -31,7 +32,8 @@ export type QuoteSimulatorProps = {
   pricingConfig: PricingConfig;
   /** Appelé quand l'utilisateur affiche son estimation (ex. : enregistrement d'un lead). */
   onQuote?: (submission: QuoteSubmission) => void;
-  contactHref?: string;
+  /** Lien du bouton « Demander une étude personnalisée » (par défaut : page questionnaire, simulation conservée). */
+  studyRequestHref?: (simulation: SimulatorSnapshot) => string;
   /** Masque la barre de progression pleine largeur (intégration dans un bloc existant). */
   hideProgress?: boolean;
 };
@@ -46,7 +48,7 @@ const REVENUE_STEP = simulatorSteps.findIndex((s) => s.id === "revenue");
 export function QuoteSimulator({
   pricingConfig,
   onQuote,
-  contactHref = simulatorContent.contactHref,
+  studyRequestHref = buildStudyRequestHref,
   hideProgress = false,
 }: QuoteSimulatorProps) {
   const [stepIndex, setStepIndex] = useState(0);
@@ -91,6 +93,20 @@ export function QuoteSimulator({
     hasNavigated.current = true;
     setStepIndex(Math.max(0, Math.min(index, RESULT_STEP)));
   }
+
+  // Choix du simulateur transmis au questionnaire d'étude personnalisée.
+  const studyHref = useMemo(
+    () =>
+      values.activityId && revenue > 0
+        ? studyRequestHref({
+            activityId: values.activityId,
+            revenue,
+            includeLegalProtection: values.legalProtection === "yes",
+            companyName: values.companyName ?? "",
+          })
+        : STUDY_REQUEST_PATH,
+    [values.activityId, revenue, values.legalProtection, values.companyName, studyRequestHref],
+  );
 
   const step = simulatorSteps[stepIndex]!;
   const isResult = step.id === "result";
@@ -163,7 +179,7 @@ export function QuoteSimulator({
             <QuoteResultView
               companyName={values.companyName}
               quote={quote}
-              contactHref={contactHref}
+              contactHref={studyHref}
               onEdit={() => goTo(0)}
               onEditRevenue={() => goTo(REVENUE_STEP)}
               onRestart={restart}

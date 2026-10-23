@@ -41,11 +41,27 @@ est indiqué entre parenthèses : il peut être ajusté sans toucher aux composa
 
 ## Parcours & design
 
-- [ ] Que faire des informations saisies (raison sociale, activité, CA) : envoi par e-mail, CRM, formulaire de rappel ? Faut-il collecter e-mail / téléphone ?
-  _(Actuel : aucune donnée n'est transmise ; le bouton « Demander une étude personnalisée » ouvre un `mailto:` provisoire défini dans `config/calculator-config.ts`.)_
+- [ ] Où envoyer les questionnaires remplis (e-mail au cabinet, CRM, outil de tarification…) ?
+  _(Actuel : le bouton « Demander une étude personnalisée » ouvre le questionnaire ; l'envoi n'est pas branché, l'écran final invite à appeler le cabinet.)_
 - [ ] Réponses de la FAQ à fournir : « Quels documents fournir pour obtenir un devis ? », « Suis-je couvert si je crée mon entreprise sans chantier réalisé ? », « En combien de temps reçoit-on son attestation ? ».
   _(Actuel : affichées « [À compléter : réponse] ». La réponse sur le coût est générée à partir de la grille.)_
-- [ ] Adresse e-mail de contact à afficher dans le pied de page (« [À compléter : e-mail] » sur la maquette).
+- [ ] Adresse e-mail de contact à afficher dans le pied de page (« [À compléter : e-mail] » sur la maquette). Les fiches de pré-tarification indiquent `contact@assurbatisseurs.fr` : est-ce bien celle-ci ?
 - [ ] Destinations des liens du menu et du pied de page (pages « Nos assurances », « Agents et courtiers », « À propos », mentions légales…) : pages du futur site ?
   _(Actuel : liens « # » centralisés dans `config/site-content.ts`. Le bouton « Demander mon étude décennale » ramène au simulateur.)_
 - [ ] Ordre des étapes : la maquette commence par l'activité (« Étape 1 sur 4 »). La raison sociale est demandée en dernière étape, avant l'estimation : est-ce le bon choix, et faut-il aussi demander e-mail / téléphone à ce moment ?
+
+## Questionnaires de pré-tarification
+
+- [ ] Quel questionnaire (Artisans, DO, RCD PIB) correspond à chaque activité du simulateur ?
+  _(Actuel : aucune règle n'est devinée ; le visiteur choisit parmi les trois fiches. Les règles se renseignent dans `questionnaireRulesByActivity`, `lib/questionnaires/questionnaireConfig.ts`.)_
+- [ ] Fiche Artisans, « Sous-traitance (Total = 100%) » : les deux pourcentages (sous-traitance confiée / travail comme sous-traitant) doivent-ils vraiment totaliser 100 % ? Une entreprise qui ne sous-traite pas ne pourrait pas remplir la fiche.
+  _(Actuel : leur somme ne peut pas dépasser 100 %.)_
+- [ ] Fiche Artisans, « Répartition du CA (Total = 100%) » : confirmez-vous deux totaux indépendants (Particuliers + Professionnels = 100 % et Rénovation + Neuf = 100 %) ?
+  _(Actuel : c'est la règle appliquée ; ces quatre champs sont obligatoires sur cette fiche.)_
+- [ ] Les pourcentages de CA des 40 activités (Artisans) et les répartitions par type d'ouvrage / de mission (RCD PIB) doivent-ils totaliser 100 % ?
+  _(Actuel : total affiché, bloquant seulement au-delà de 100 %.)_
+- [ ] Quels champs sont obligatoires ? Les fiches n'en marquent aucun.
+  _(Actuel : coordonnées du demandeur — nom, téléphone, e-mail —, raison sociale ou nom du maître d'ouvrage, au moins une activité (Artisans, RCD PIB) ou une garantie (DO), et date + nature pour chaque sinistre déclaré.)_
+- [ ] Fiche DO : « Dont sous-sol » est-il un nombre d'étages en sous-sol ? « Type de travaux : Autre » doit-il être précisé (la fiche ne prévoit pas de zone de texte, contrairement à « Type de bâtiment : Autre ») ?
+- [ ] Signature : une signature électronique est-elle souhaitée à terme ?
+  _(Actuel : « Fait à », « Le » et nom du signataire ; la signature et le cachet sont apposés sur le document final.)_

@@ -54,17 +54,20 @@ La séparation suit trois couches : **UI → logique métier → données tarifa
 app/
   page.tsx                    Page du simulateur : en-tête, simulateur, atouts, FAQ, pied de page
   admin/page.tsx              Page d'administration
+  etude-personnalisee/        Page questionnaire (demande d'étude personnalisée)
   api/pricing-config/         GET (public) / PUT (admin) de la grille, POST reset/ (valeurs Excel)
 components/
   simulator/                  QuoteSimulator + étapes, ProgressBar, PriceSummary, PriceBreakdown…
   site/                       Habillage du site (SiteHeader, SiteFooter, StrengthsSection, FaqSection, Logo)
   admin/                      MinimumPremiumManager, ActivityManager, BracketEditor, FeeSettings…
+  questionnaires/             QuestionnaireRenderer, fiches Artisans / DO / RCD PIB, champs, ClaimsTable…
   ui/                         Composants génériques (Button, Icon, Card, FormField, ChoiceCard…)
 lib/
   calculator/                 Moteur de calcul pur : calculateQuote + règles (pricingRules)
   pricing/                    Schéma Zod, opérations d'édition, dépôt (repository.server.ts), cache, client API
   pricing/stores/             Supports de stockage : fichier JSON (local) et Vercel Blob (production)
   simulator/                  Schéma du formulaire et définition des étapes
+  questionnaires/             Options, schémas Zod, règles de sélection, transmission de la simulation, envoi
   format.ts                   Formats monétaires français (1 704,00 €)
 data/pricing-data.ts          Grille initiale extraite de l'Excel
 types/                        Types TypeScript (pricing.ts, simulator.ts)
@@ -191,14 +194,15 @@ export default async function DevisPage() {
   return (
     <QuoteSimulator
       pricingConfig={pricingConfig}
-      contactHref="/contact"
+      studyRequestHref={(simulation) => `/etude-personnalisee?activite=${simulation.activityId}`}
       onQuote={({ values, quote }) => { /* ex. : envoi d'un lead */ }}
     />
   );
 }
 ```
 
-Props : `pricingConfig` (obligatoire), `contactHref`, `onQuote` (appelé à l'affichage de l'estimation),
+Props : `pricingConfig` (obligatoire), `studyRequestHref` (lien du bouton « Demander une étude personnalisée » ;
+par défaut la page questionnaire avec la simulation dans l'URL), `onQuote` (appelé à l'affichage de l'estimation),
 `hideProgress` (masque la barre de progression pleine largeur).
 
 L'habillage (`components/site/`, `config/site-content.ts`) est indépendant du simulateur : le futur site peut
@@ -214,6 +218,36 @@ const result = calculateQuote({ activityId: "plomberie-seul", revenue: 150_000, 
 Pour intégrer : copier `components/`, `lib/`, `types/`, `data/`, `config/` et les tokens `@theme` de
 `app/globals.css` (Tailwind CSS v4), ajouter les dépendances `zod`, `react-hook-form`, `@hookform/resolvers`,
 et les polices Archivo / Jost (`next/font/google`, voir `app/layout.tsx`).
+
+## Questionnaires de pré-tarification
+
+Le bouton « Demander une étude personnalisée » du résultat mène à `/etude-personnalisee`, qui affiche l'une des
+trois fiches de pré-tarification (références Excel dans `docs/questionnaires/`) :
+
+```
+Simulateur ── choix (activité, CA, PJ, raison sociale) dans l'URL ──▶ /etude-personnalisee
+                                                                          │
+                                                   getQuestionnaireType(simulation)
+                                                                          │
+                                                               QuestionnaireRenderer
+                                              ┌───────────────────────────┼───────────────────────────┐
+                                     QuestionnaireArtisans          QuestionnaireDO          QuestionnaireRCDPIB
+```
+
+- **Choix du questionnaire** : une seule fonction, `getQuestionnaireType` (`lib/questionnaires/questionnaireConfig.ts`),
+  qui lit la table `questionnaireRulesByActivity` (identifiant d'activité → `"artisans" | "do" | "rcd-pib"`).
+  Tant qu'une activité n'y figure pas, la page propose au visiteur de choisir parmi les trois fiches.
+  Le paramètre `?questionnaire=artisans|do|rcd-pib` force une fiche, `?questionnaire=choisir` affiche le choix.
+- **Données de simulation** : transmises par l'URL (`lib/questionnaires/simulatorSnapshot.ts`), rappelées en haut
+  de page et reprises dans la fiche (raison sociale, CA prévisionnel). Rien n'est perdu au rechargement.
+- **Champs et listes** : les options (40 activités, activités PIB, garanties DO…) sont des données
+  (`lib/questionnaires/options.ts`) ; les libellés sont ceux des fiches Excel.
+- **Validation** : schémas Zod par fiche (`lib/questionnaires/schemas.ts`) avec React Hook Form : champs obligatoires
+  (coordonnées, activités, garanties), e-mail, téléphone, code postal, SIRET (14 chiffres), dates, nombres,
+  pourcentages, totaux (« Total = 100% » de la fiche Artisans, totaux ≤ 100 % ailleurs).
+- **Envoi** : `submitQuestionnaire` (`lib/questionnaires/submitQuestionnaire.ts`) reçoit les données validées et typées.
+  **Aucune API n'est encore branchée** : la fonction ne transmet rien et l'écran de succès invite à appeler le cabinet.
+  Pour brancher l'API, remplacer le corps de cette fonction et renvoyer `{ delivered: true }`.
 
 ## Design
 

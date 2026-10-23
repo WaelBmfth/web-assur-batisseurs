@@ -20,5 +20,4 @@ export const simulatorContent = {
   disclaimer:
     "Estimation indicative et non contractuelle, établie à partir de notre grille tarifaire en vigueur. Le tarif définitif dépend de l'étude de votre dossier par nos équipes.",
   contactLabel: "Demander une étude personnalisée",
-  contactHref: "mailto:contact@assurbatisseurs.fr",
 } as const;
