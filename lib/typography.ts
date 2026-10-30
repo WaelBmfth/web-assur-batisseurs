@@ -14,6 +14,7 @@ export function frenchSpacing(text: string): string {
 export function faqAnswerToPlainText(answer: FaqAnswer): string {
   if (answer.kind === "text") return frenchSpacing(answer.text);
   const sections = answer.sections.map((section) => {
+    if ("text" in section) return `${section.heading} ${section.text}.`;
     const items = section.items.map((item, index) => {
       const prefix = section.ordered ? `${index + 1}. ` : "";
       const details = item.items?.length ? ` ${item.items.join(" ; ")}.` : "";

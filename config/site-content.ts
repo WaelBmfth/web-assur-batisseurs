@@ -115,12 +115,14 @@ export const strengths: { icon: IconName; title: string; text: string }[] = [
 export type FaqListItem = { title: string; items?: string[] };
 
 /**
- * Réponse de FAQ : texte simple, ou sections titrées contenant chacune une liste
- * (numérotée ou à puces), ex. pièces à fournir pour un devis / pour la souscription.
+ * Réponse de FAQ : texte simple, ou sections titrées contenant chacune une phrase
+ * ou une liste (numérotée ou à puces), ex. pièces à fournir pour un devis / pour la souscription.
  */
 export type FaqAnswer =
   | { kind: "text"; text: string }
-  | { kind: "sections"; sections: { heading: string; ordered: boolean; items: FaqListItem[] }[] };
+  | { kind: "sections"; sections: FaqSection[] };
+
+export type FaqSection = { heading: string } & ({ text: string } | { ordered: boolean; items: FaqListItem[] });
 
 export type FaqItem = { id: string; question: string; answer: FaqAnswer };
 
@@ -155,8 +157,7 @@ export const faq: FaqItem[] = [
       sections: [
         {
           heading: "Pour obtenir un devis :",
-          ordered: false,
-          items: [{ title: "Un relevé de sinistralité" }, { title: "L'attestation en cours (si assuré)" }],
+          text: "Juste un relevé de sinistre et attestation en cours (si assuré)",
         },
         {
           heading: "Pour la souscription, voici la liste des pièces à fournir :",

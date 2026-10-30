@@ -77,6 +77,14 @@ function Answer({ answer }: { answer: FaqAnswer }) {
   return (
     <div className="flex flex-col gap-5">
       {answer.sections.map((section) => {
+        if ("text" in section) {
+          return (
+            <div key={section.heading}>
+              <h4 className="font-semibold text-ink">{frenchSpacing(section.heading)}</h4>
+              <p className="mt-2">{frenchSpacing(section.text)}</p>
+            </div>
+          );
+        }
         const List = section.ordered ? "ol" : "ul";
         return (
           <div key={section.heading}>
