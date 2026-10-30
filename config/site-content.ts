@@ -111,10 +111,16 @@ export const strengths: { icon: IconName; title: string; text: string }[] = [
   },
 ];
 
-/** Réponse de FAQ : texte simple, ou liste structurée (pièces à fournir). */
+/** Élément de liste d'une réponse : libellé, avec éventuellement des sous-points. */
+export type FaqListItem = { title: string; items?: string[] };
+
+/**
+ * Réponse de FAQ : texte simple, ou sections titrées contenant chacune une liste
+ * (numérotée ou à puces), ex. pièces à fournir pour un devis / pour la souscription.
+ */
 export type FaqAnswer =
   | { kind: "text"; text: string }
-  | { kind: "steps"; intro: string; steps: { title: string; items?: string[] }[] };
+  | { kind: "sections"; sections: { heading: string; ordered: boolean; items: FaqListItem[] }[] };
 
 export type FaqItem = { id: string; question: string; answer: FaqAnswer };
 
@@ -138,42 +144,51 @@ export const faq: FaqItem[] = [
     question: "Combien coûte une assurance décennale pour un artisan du BTP ?",
     answer: {
       kind: "text",
-      text: "Le tarif dépend de votre activité, de votre chiffre d'affaires et de votre effectif. Sur notre grille actuelle, la prime d'assurance démarre à 740 € TTC par an (soit moins de 62 € / mois), hors frais de courtage et options. Le simulateur ci-dessus vous donne une fourchette personnalisée en 2 minutes.",
+      text: "Le tarif dépend de votre activité, de votre chiffre d'affaires et de votre effectif. Sur notre grille actuelle, la prime d'assurance démarre à 750,00 € TTC par an (soit 62,50 € / mois), hors frais de courtage et options. Le simulateur ci-dessus vous donne une fourchette personnalisée en 2 minutes.",
     },
   },
   {
     id: "documents",
     question: "Quels documents fournir pour obtenir un devis ?",
     answer: {
-      kind: "steps",
-      intro:
-        "Juste un relevé de sinistralité et l'attestation en cours (si assuré). Pour la souscription, voici la liste des pièces à fournir :",
-      steps: [
+      kind: "sections",
+      sections: [
         {
-          title: "Un document prouvant l'existence de votre entreprise :",
-          items: [
-            "Un extrait K-bis de moins de 3 mois si l'entreprise est immatriculée au Registre du Commerce et des Sociétés (RCS)",
-            "Un extrait D1 ou immatriculation au Répertoire des Métiers (si artisan)",
-            "L'avis de situation INSEE (SIREN/SIRET)",
-            "Une facture vierge de votre entreprise (souvent demandée pour vérifier les mentions légales obligatoires, dont le numéro d'assurance ou le statut)",
-          ],
+          heading: "Pour obtenir un devis :",
+          ordered: false,
+          items: [{ title: "Un relevé de sinistralité" }, { title: "L'attestation en cours (si assuré)" }],
         },
         {
-          title: "Justificatifs d'expérience professionnelle :",
+          heading: "Pour la souscription, voici la liste des pièces à fournir :",
+          ordered: true,
           items: [
-            "Certificats de travail dans le métier concerné (2 ans pour le second œuvre et 3 ans pour le gros œuvre)",
-            "Bulletins de salaire sur plusieurs années",
-            "Attestations d'emploi ou détails de missions antérieures",
-            "Diplômes",
-            "L'ancienne attestation d'assurance décennale (si déjà assuré)",
-            "CV du gérant",
-            "Pièce d'identité du gérant",
-            "Certifications professionnelles",
+            {
+              title: "Un document prouvant l'existence de votre entreprise :",
+              items: [
+                "Un extrait K-bis de moins de 3 mois si l'entreprise est immatriculée au Registre du Commerce et des Sociétés (RCS)",
+                "Un extrait D1 ou immatriculation au Répertoire des Métiers (si artisan)",
+                "L'avis de situation INSEE (SIREN/SIRET)",
+                "Une facture vierge de votre entreprise (souvent demandée pour vérifier les mentions légales obligatoires, dont le numéro d'assurance ou le statut)",
+              ],
+            },
+            {
+              title: "Justificatifs d'expérience professionnelle :",
+              items: [
+                "Certificats de travail dans le métier concerné (2 ans pour le second œuvre et 3 ans pour le gros œuvre)",
+                "Bulletins de salaire sur plusieurs années",
+                "Attestations d'emploi ou détails de missions antérieures",
+                "Diplômes",
+                "L'ancienne attestation d'assurance décennale (si déjà assuré)",
+                "CV du gérant",
+                "Pièce d'identité du gérant",
+                "Certifications professionnelles",
+              ],
+            },
+            { title: "Relevé de sinistralité et attestation précédente" },
+            { title: "RIB et mandat de paiement" },
+            { title: "Devis et pièces obligatoires signées" },
           ],
         },
-        { title: "Relevé de sinistralité et attestation précédente" },
-        { title: "RIB et mandat de paiement" },
-        { title: "Devis et pièces obligatoires signées" },
       ],
     },
   },

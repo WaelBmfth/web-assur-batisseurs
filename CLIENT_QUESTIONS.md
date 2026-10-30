@@ -43,8 +43,8 @@ est indiqué entre parenthèses : il peut être ajusté sans toucher aux composa
 
 - [ ] Où envoyer les questionnaires remplis (e-mail au cabinet, CRM, outil de tarification…) ?
   _(Actuel : le bouton « Demander une étude personnalisée » ouvre le questionnaire ; l'envoi n'est pas branché, l'écran final invite à appeler le cabinet.)_
-- [ ] FAQ « Combien coûte… » : la réponse validée indique une prime « à partir de 740 € TTC par an », mais la grille tarifaire du simulateur démarre à 444 € (13 activités, fiche Excel). Faut-il mettre la grille à jour ?
-  _(Actuel : la FAQ affiche 740 € comme demandé ; la grille n'a pas été modifiée.)_
+- [ ] FAQ « Combien coûte… » : la réponse indique une prime « à partir de 750,00 € TTC par an », mais la grille tarifaire du simulateur démarre à 444 € (13 activités, fiche Excel). Un visiteur peut donc obtenir une estimation inférieure au montant annoncé dans la FAQ : est-ce voulu ?
+  _(Actuel : la FAQ affiche 750,00 € comme demandé ; la grille et le calcul ne sont volontairement pas modifiés.)_
 - [ ] Adresse e-mail de contact à afficher dans le pied de page (« [À compléter : e-mail] » sur la maquette). Les fiches de pré-tarification indiquent `contact@assurbatisseurs.fr` : est-ce bien celle-ci ?
 - [ ] Destinations des liens du menu et du pied de page (pages « Nos assurances », « Agents et courtiers », « À propos », mentions légales…) : pages du futur site ?
   _(Actuel : liens « # » centralisés dans `config/site-content.ts`. Le bouton « Demander mon étude décennale » ramène au simulateur.)_

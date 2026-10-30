@@ -75,22 +75,36 @@ export function FaqAccordion({ items }: { items: FaqItem[] }) {
 function Answer({ answer }: { answer: FaqAnswer }) {
   if (answer.kind === "text") return <p>{frenchSpacing(answer.text)}</p>;
   return (
-    <>
-      <p>{frenchSpacing(answer.intro)}</p>
-      <ol className="mt-4 flex list-decimal flex-col gap-3 pl-6 marker:font-bold marker:text-gold-700">
-        {answer.steps.map((step) => (
-          <li key={step.title} className="pl-1.5">
-            <span className="font-semibold text-ink">{frenchSpacing(step.title)}</span>
-            {step.items && (
-              <ul className="mt-2 flex list-disc flex-col gap-1.5 pl-5 marker:text-gold-500">
-                {step.items.map((entry) => (
-                  <li key={entry}>{frenchSpacing(entry)}</li>
-                ))}
-              </ul>
-            )}
-          </li>
-        ))}
-      </ol>
-    </>
+    <div className="flex flex-col gap-5">
+      {answer.sections.map((section) => {
+        const List = section.ordered ? "ol" : "ul";
+        return (
+          <div key={section.heading}>
+            <h4 className="font-semibold text-ink">{frenchSpacing(section.heading)}</h4>
+            <List
+              className={cn(
+                "mt-3 flex flex-col pl-6",
+                section.ordered
+                  ? "list-decimal gap-3 marker:font-bold marker:text-gold-700"
+                  : "list-disc gap-1.5 marker:text-gold-500",
+              )}
+            >
+              {section.items.map((item) => (
+                <li key={item.title} className="pl-1.5">
+                  <span className={section.ordered ? "font-semibold text-ink" : undefined}>{frenchSpacing(item.title)}</span>
+                  {item.items && (
+                    <ul className="mt-2 flex list-disc flex-col gap-1.5 pl-5 marker:text-gold-500">
+                      {item.items.map((entry) => (
+                        <li key={entry}>{frenchSpacing(entry)}</li>
+                      ))}
+                    </ul>
+                  )}
+                </li>
+              ))}
+            </List>
+          </div>
+        );
+      })}
+    </div>
   );
 }
