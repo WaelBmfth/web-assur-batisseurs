@@ -23,6 +23,9 @@ est indiqué entre parenthèses : il peut être ajusté sans toucher aux composa
 
 ## Activités
 
+- [ ] Protection Juridique optionnelle : la liste mentionne « Architecte d'intérieur (sans suivi) » et « Architecte d'intérieur (avec suivi) ». Le simulateur contient « Architecte d'intérieur (sans structure, seul) » et « Architecte avec suivi de travaux (seul) » : est-ce bien la correspondance attendue ?
+  _(Actuel : ces deux activités ont la PJ optionnelle ; toutes les activités hors des 7 listées ont la PJ incluse d'office. La liste se modifie dans `data/pricing-data.ts`, pas encore depuis `/admin`.)_
+
 - [ ] Toutes les activités sont libellées « seul ». Comment traiter une entreprise qui exerce **plusieurs activités** (ex. plomberie + électricité) : activité la plus chère, cumul, étude personnalisée ?
   _(Actuel : une seule activité sélectionnable ; un lien « étude personnalisée » est proposé si le métier n'est pas listé.)_
 - [ ] « Architecte d'intérieur (sans structure, seul) » est classé « Conception seule / Aménagement » mais tarifé comme le gros œuvre (1 704 € à 2 154 €). Peut-on confirmer ?

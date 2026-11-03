@@ -22,19 +22,34 @@ type Row = { label: string; detail?: string; year1: ReactNode; following: ReactN
 /** Détail du calcul — reprend la section « 3. Décompte détaillé » de l'Excel. */
 export function PriceBreakdown({ quote }: { quote: QuoteSuccess }) {
   const lp = quote.legalProtection;
+  const bracket = `tranche ${formatRevenueRange(quote.bracket.revenueMin, quote.bracket.revenueMax)}`;
+  // PJ incluse d'office (activité sans étape PJ) : une seule ligne prime + PJ.
+  const legalProtectionBuiltIn = lp.mode === "included" && lp.included;
+  const premiumRows: Row[] = legalProtectionBuiltIn
+    ? [
+        {
+          label: "Prime d'assurance avec protection juridique incluse",
+          detail: `Fourchette TTC · ${bracket}`,
+          year1: <RangeCell range={quote.insuranceWithLegalProtection} />,
+          following: <RangeCell range={quote.insuranceWithLegalProtection} />,
+        },
+      ]
+    : [
+        {
+          label: "Prime d'assurance",
+          detail: `Fourchette TTC · ${bracket}`,
+          year1: <RangeCell range={quote.insurance} />,
+          following: <RangeCell range={quote.insurance} />,
+        },
+        {
+          label: "Protection Juridique",
+          detail: lp.included ? "Option incluse" : "Non incluse",
+          year1: formatEuro(lp.amount),
+          following: formatEuro(lp.amount),
+        },
+      ];
   const rows: Row[] = [
-    {
-      label: "Prime d'assurance",
-      detail: `Fourchette TTC · tranche ${formatRevenueRange(quote.bracket.revenueMin, quote.bracket.revenueMax)}`,
-      year1: <RangeCell range={quote.insurance} />,
-      following: <RangeCell range={quote.insurance} />,
-    },
-    {
-      label: "Protection Juridique",
-      detail: lp.included ? "Option incluse" : "Non incluse",
-      year1: formatEuro(lp.amount),
-      following: formatEuro(lp.amount),
-    },
+    ...premiumRows,
     {
       label: "Frais de courtage",
       detail: "Gestion de dossier, selon l'année",
@@ -43,7 +58,7 @@ export function PriceBreakdown({ quote }: { quote: QuoteSuccess }) {
     },
     {
       label: "Total annuel",
-      detail: "Prime + PJ + courtage",
+      detail: legalProtectionBuiltIn ? "Prime (PJ incluse) + courtage" : "Prime + PJ + courtage",
       year1: <RangeCell range={quote.year1.total} />,
       following: <RangeCell range={quote.followingYears.total} />,
       strong: true,

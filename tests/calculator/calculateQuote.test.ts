@@ -135,24 +135,13 @@ describe("calculateQuote — montants", () => {
     expect(result.insurance).toEqual({ min: 444, max: 444 });
   });
 
-  it("ajoute la Protection Juridique quand elle est choisie", () => {
-    const result = plumbing(true);
-    expect(result.legalProtection).toEqual({ included: true, amount: 296 });
-    expect(result.year1.total).toEqual({ min: 444 + 296 + 450, max: 1160 + 296 + 450 });
-  });
-
-  it("n'ajoute rien quand la Protection Juridique est refusée", () => {
-    const result = plumbing(false);
-    expect(result.legalProtection).toEqual({ included: false, amount: 0 });
-    expect(result.year1.total).toEqual({ min: 444 + 450, max: 1160 + 450 });
-  });
-
-  it("n'ajoute pas la Protection Juridique si l'option est désactivée", () => {
+  it("n'ajoute pas la Protection Juridique si elle est désactivée dans l'administration", () => {
     const off = { ...config, legalProtection: { ...config.legalProtection, enabled: false } };
-    const result = expectOk(
-      calculateQuote({ activityId: "plomberie-seul", revenue: 150_000, includeLegalProtection: true }, off),
-    );
-    expect(result.legalProtection).toEqual({ included: false, amount: 0 });
+    for (const activityId of ["plomberie-seul", "photovoltaique-seul"]) {
+      const result = expectOk(calculateQuote({ activityId, revenue: 150_000, includeLegalProtection: true }, off));
+      expect(result.legalProtection).toMatchObject({ included: false, amount: 0 });
+      expect(result.insuranceWithLegalProtection).toEqual(result.insurance);
+    }
   });
 
   it("calcule l'année 1 avec le courtage de 1ère année", () => {
@@ -173,13 +162,63 @@ describe("calculateQuote — montants", () => {
     const result = expectOk(
       calculateQuote({ activityId: "plomberie-seul", revenue: 150_000, includeLegalProtection: false }, fees),
     );
-    expect(result.year1.total.min).toBe(944);
-    expect(result.followingYears.total.min).toBe(744);
+    // Plomberie : PJ (296 €) incluse d'office.
+    expect(result.year1.total.min).toBe(444 + 296 + 500);
+    expect(result.followingYears.total.min).toBe(444 + 296 + 300);
   });
 
   it("calcule les mensualités (total / 12, arrondi au centime)", () => {
     const result = plumbing(true);
     expect(result.year1.monthly).toEqual({ min: 99.17, max: 158.83 });
     expect(result.followingYears.monthly).toEqual({ min: 82.5, max: 142.17 });
+  });
+});
+
+describe("Protection Juridique — activités à PJ optionnelle", () => {
+  const solar = (includeLegalProtection: boolean) =>
+    expectOk(calculateQuote({ activityId: "photovoltaique-seul", revenue: 150_000, includeLegalProtection }, config));
+
+  it("ajoute la PJ quand elle est choisie", () => {
+    const result = solar(true);
+    expect(result.legalProtection).toEqual({ mode: "optional", included: true, amount: 296 });
+    expect(result.year1.total).toEqual({ min: 1704 + 296 + 450, max: 2154 + 296 + 450 });
+    expect(result.followingYears.total).toEqual({ min: 1704 + 296 + 250, max: 2154 + 296 + 250 });
+  });
+
+  it("n'ajoute rien quand la PJ est refusée", () => {
+    const result = solar(false);
+    expect(result.legalProtection).toEqual({ mode: "optional", included: false, amount: 0 });
+    expect(result.insuranceWithLegalProtection).toEqual({ min: 1704, max: 2154 });
+    expect(result.year1.total).toEqual({ min: 1704 + 450, max: 2154 + 450 });
+    expect(result.year1.monthly).toEqual({ min: 179.5, max: 217 });
+  });
+});
+
+describe("Protection Juridique — activités à PJ incluse d'office", () => {
+  it("inclut la PJ même si le client ne l'a pas choisie", () => {
+    for (const include of [true, false]) {
+      const result = expectOk(calculateQuote({ activityId: "plomberie-seul", revenue: 150_000, includeLegalProtection: include }, config));
+      expect(result.legalProtection).toEqual({ mode: "included", included: true, amount: 296 });
+    }
+  });
+
+  it("prime avec PJ incluse : 444,00 € + 296,00 € = 740,00 € (et 1 160 € + 296 € = 1 456 €)", () => {
+    const result = expectOk(calculateQuote({ activityId: "plomberie-seul", revenue: 150_000, includeLegalProtection: false }, config));
+    expect(result.insurance).toEqual({ min: 444, max: 1160 });
+    expect(result.insuranceWithLegalProtection).toEqual({ min: 740, max: 1456 });
+  });
+
+  it("totaux et mensualités : PJ comptée une seule fois", () => {
+    const result = expectOk(calculateQuote({ activityId: "plomberie-seul", revenue: 150_000, includeLegalProtection: false }, config));
+    expect(result.year1.total).toEqual({ min: 740 + 450, max: 1456 + 450 });
+    expect(result.followingYears.total).toEqual({ min: 740 + 250, max: 1456 + 250 });
+    expect(result.year1.monthly).toEqual({ min: 99.17, max: 158.83 });
+    expect(result.followingYears.monthly).toEqual({ min: 82.5, max: 142.17 });
+  });
+
+  it("suit le prix de la PJ de la configuration (aucun montant codé en dur)", () => {
+    const pricier = { ...config, legalProtection: { ...config.legalProtection, price: 310 } };
+    const result = expectOk(calculateQuote({ activityId: "plomberie-seul", revenue: 150_000, includeLegalProtection: false }, pricier));
+    expect(result.insuranceWithLegalProtection).toEqual({ min: 444 + 310, max: 1160 + 310 });
   });
 });

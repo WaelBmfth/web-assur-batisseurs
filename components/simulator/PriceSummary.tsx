@@ -39,7 +39,12 @@ export function PriceSummary({ quote }: { quote: QuoteSuccess }) {
         </p>
         <p className="relative mt-5 border-t border-white/10 pt-4 text-xs text-white/60">
           Montants TTC · prime d&apos;assurance
-          {quote.legalProtection.included ? " + Protection Juridique" : ""} + frais de courtage
+          {quote.legalProtection.included
+            ? quote.legalProtection.mode === "included"
+              ? " avec protection juridique incluse"
+              : " + Protection Juridique"
+            : ""}{" "}
+          + frais de courtage
         </p>
       </section>
 

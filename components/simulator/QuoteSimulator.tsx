@@ -6,13 +6,13 @@ import { useForm, useWatch } from "react-hook-form";
 import { SectionHeading } from "@/components/site/SectionHeading";
 import { Button } from "@/components/ui/Button";
 import { ArrowBadge, Icon } from "@/components/ui/Icon";
-import { calculateQuote, getSelectableActivities } from "@/lib/calculator";
+import { calculateQuote, getLegalProtectionMode, getSelectableActivities } from "@/lib/calculator";
 import { cn } from "@/lib/cn";
 import { parseAmount } from "@/lib/format";
 import { buildStudyRequestHref, STUDY_REQUEST_PATH } from "@/lib/questionnaires/simulatorSnapshot";
 import type { SimulatorSnapshot } from "@/lib/questionnaires/types";
 import { emptySimulatorForm, simulatorFormSchema, type SimulatorFormValues } from "@/lib/simulator/formSchema";
-import { inputStepCount, simulatorSteps } from "@/lib/simulator/steps";
+import { getSimulatorSteps, type SimulatorStep } from "@/lib/simulator/steps";
 import type { PricingConfig } from "@/types/pricing";
 import type { QuoteResult } from "@/types/simulator";
 import { CompanyInfoStep } from "./CompanyInfoStep";
@@ -38,8 +38,6 @@ export type QuoteSimulatorProps = {
   hideProgress?: boolean;
 };
 
-const RESULT_STEP = simulatorSteps.length - 1;
-const REVENUE_STEP = simulatorSteps.findIndex((s) => s.id === "revenue");
 
 /**
  * Simulateur de devis autonome. Toute la logique tarifaire est déléguée à
@@ -51,7 +49,7 @@ export function QuoteSimulator({
   studyRequestHref = buildStudyRequestHref,
   hideProgress = false,
 }: QuoteSimulatorProps) {
-  const [stepIndex, setStepIndex] = useState(0);
+  const [stepId, setStepId] = useState<SimulatorStep["id"]>("activity");
   const headingRef = useRef<HTMLDivElement>(null);
   const hasNavigated = useRef(false);
 
@@ -73,6 +71,12 @@ export function QuoteSimulator({
 
   const activities = useMemo(() => getSelectableActivities(pricingConfig), [pricingConfig]);
   const selectedActivity = activities.find((a) => a.id === values.activityId);
+  // Étape PJ affichée seulement si la PJ est optionnelle pour l'activité (avant tout choix : affichée).
+  const legalProtectionMode = selectedActivity ? getLegalProtectionMode(pricingConfig, selectedActivity.id) : "optional";
+  const steps = useMemo(() => getSimulatorSteps(legalProtectionMode === "optional"), [legalProtectionMode]);
+  const stepIndex = Math.max(0, steps.findIndex((s) => s.id === stepId));
+  const resultIndex = steps.length - 1;
+  const inputStepCount = steps.length - 1;
   const revenue = parseAmount(values.revenue ?? "");
 
   const quote = useMemo<QuoteResult | null>(() => {
@@ -91,7 +95,7 @@ export function QuoteSimulator({
 
   function goTo(index: number) {
     hasNavigated.current = true;
-    setStepIndex(Math.max(0, Math.min(index, RESULT_STEP)));
+    setStepId(steps[Math.max(0, Math.min(index, resultIndex))]!.id);
   }
 
   // Choix du simulateur transmis au questionnaire d'étude personnalisée.
@@ -101,16 +105,17 @@ export function QuoteSimulator({
         ? studyRequestHref({
             activityId: values.activityId,
             revenue,
-            includeLegalProtection: values.legalProtection === "yes",
+            // PJ effectivement retenue (choix du client, ou incluse d'office selon l'activité).
+            includeLegalProtection: quote?.ok ? quote.legalProtection.included : values.legalProtection === "yes",
             companyName: values.companyName ?? "",
           })
         : STUDY_REQUEST_PATH,
-    [values.activityId, revenue, values.legalProtection, values.companyName, studyRequestHref],
+    [values.activityId, revenue, values.legalProtection, values.companyName, studyRequestHref, quote],
   );
 
-  const step = simulatorSteps[stepIndex]!;
+  const step = steps[stepIndex]!;
   const isResult = step.id === "result";
-  const isLastInput = stepIndex === RESULT_STEP - 1;
+  const isLastInput = stepIndex === resultIndex - 1;
 
   async function next() {
     if (!(await trigger(step.fields, { shouldFocus: true }))) return;
@@ -127,7 +132,7 @@ export function QuoteSimulator({
       pricingConfig,
     );
     onQuote?.({ values: submitted, quote: result });
-    goTo(RESULT_STEP);
+    goTo(resultIndex);
   }
 
   function restart() {
@@ -181,7 +186,7 @@ export function QuoteSimulator({
               quote={quote}
               contactHref={studyHref}
               onEdit={() => goTo(0)}
-              onEditRevenue={() => goTo(REVENUE_STEP)}
+              onEditRevenue={() => goTo(steps.findIndex((s) => s.id === "revenue"))}
               onRestart={restart}
             />
           )}

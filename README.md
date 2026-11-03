@@ -3,7 +3,8 @@
 Application **Next.js standalone** permettant d'estimer un budget d'assurance BTP à partir de l'activité,
 du chiffre d'affaires prévisionnel et de l'option Protection Juridique. Elle comprend :
 
-- le **simulateur** (`/`) : 4 étapes (activité, chiffre d'affaires, Protection Juridique, raison sociale) puis l'estimation,
+- le **simulateur** (`/`) : activité, chiffre d'affaires, Protection Juridique (seulement pour les activités où elle est
+  optionnelle), raison sociale, puis l'estimation,
   avec fourchette basse / haute, total année 1, total années suivantes, mensualité indicative et détail du calcul ;
 - une **administration** (`/admin`) pour gérer minimums de prime, activités, tranches de CA et frais,
   sans modifier le code.
@@ -94,7 +95,12 @@ calculateQuote(input: QuoteInput, pricingConfig: PricingConfig): QuoteResult
 1. recherche de l'activité (doit exister et être active) ;
 2. recherche de la tranche contenant le CA (bornes incluses) ;
 3. fourchette de prime : **minimum de prime** (bas) et **borne haute** (haut ; égale au minimum si absente) ;
-4. Protection Juridique : `prix` si choisie et proposée, sinon `0` — Excel `=IF(B8="Oui";E8;0)` ;
+4. Protection Juridique (`resolveLegalProtection`) :
+   - activités listées dans `legalProtection.optionalActivityIds` (7 activités, `data/pricing-data.ts`) : option au
+     choix à l'étape 3, `prix` si choisie, sinon `0` — Excel `=IF(B8="Oui";E8;0)` ;
+   - toutes les autres : pas d'étape PJ, `prix` inclus d'office ; le résultat affiche alors une seule ligne
+     « Prime d'assurance avec protection juridique incluse » (prime + PJ, ex. 444 € + 296 € = 740 €) ;
+   - `0` si la PJ est désactivée dans l'administration ;
 5. total **année 1** = prime + PJ + courtage 1ère année (450 €) — Excel `C18:C19` ;
 6. total **années suivantes** = prime + PJ + courtage années suivantes (250 €) — Excel `D18:D19` ;
 7. mensualité = total ÷ 12, arrondie au centime — Excel `C20:D21`.

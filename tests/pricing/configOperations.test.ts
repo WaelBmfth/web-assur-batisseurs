@@ -27,8 +27,9 @@ describe("Minimum de prime modifié depuis l'administration", () => {
     const after = calculateQuote(plumbingInput, edited);
 
     expect(after.ok && after.insurance).toEqual({ min: 500, max: 1160 });
-    expect(after.ok && after.year1.total.min).toBe(500 + 450);
-    expect(after.ok && after.followingYears.total.min).toBe(500 + 250);
+    // Plomberie : PJ (296 €) incluse d'office.
+    expect(after.ok && after.year1.total.min).toBe(500 + 296 + 450);
+    expect(after.ok && after.followingYears.total.min).toBe(500 + 296 + 250);
     // L'original n'est pas muté, les autres activités ne bougent pas.
     expect(config.activities.find((a) => a.id === "plomberie-seul")!.brackets[0]!.premiumMin).toBe(444);
     const kitchens = calculateQuote({ ...plumbingInput, activityId: "cuisines-seul" }, edited);

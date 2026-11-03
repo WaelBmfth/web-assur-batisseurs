@@ -55,7 +55,7 @@ export function QuoteResultView({ companyName, quote, contactHref, onEdit, onEdi
         <Badge tone="gold">{quote.activity.name}</Badge>
         <Badge tone="neutral">CA {formatEuro(quote.revenue, { decimals: false })} HT</Badge>
         <Badge tone={quote.legalProtection.included ? "success" : "neutral"}>
-          PJ : {quote.legalProtection.included ? "Oui" : "Non"}
+          PJ : {quote.legalProtection.included ? (quote.legalProtection.mode === "included" ? "incluse" : "Oui") : "Non"}
         </Badge>
       </div>
 

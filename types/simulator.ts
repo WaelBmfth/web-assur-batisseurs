@@ -29,10 +29,14 @@ export type QuoteSuccess = {
   /** Prime d'assurance seule (fourchette TTC). */
   insurance: AmountRange;
   legalProtection: {
+    /** « optional » : choisie ou non par le client ; « included » : incluse d'office dans la prime. */
+    mode: "optional" | "included";
     included: boolean;
     /** Montant ajouté au budget (0 si non incluse). */
     amount: number;
   };
+  /** Prime d'assurance + PJ éventuelle (fourchette TTC), affichée en une ligne quand la PJ est incluse d'office. */
+  insuranceWithLegalProtection: AmountRange;
   year1: PeriodTotals;
   followingYears: PeriodTotals;
   /** Écart de courtage entre l'année 1 et les années suivantes. */

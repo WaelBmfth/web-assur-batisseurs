@@ -66,9 +66,28 @@ export function resolvePremiumRange(bracket: PremiumBracket): AmountRange {
   };
 }
 
-/** Excel : =IF($B$8="Oui",$E$8,0) — et 0 si l'option est désactivée dans l'administration. */
-export function resolveLegalProtectionAmount(config: PricingConfig, include: boolean): number {
-  return include && config.legalProtection.enabled ? config.legalProtection.price : 0;
+/**
+ * Protection Juridique d'une activité :
+ * - « optional » : activité listée dans `legalProtection.optionalActivityIds`, le client choisit (étape 3) ;
+ * - « included » : toute autre activité, la PJ est incluse d'office dans la prime.
+ * Seul point de décision de l'éligibilité : l'interface et le calcul s'appuient sur cette fonction.
+ */
+export function getLegalProtectionMode(config: PricingConfig, activityId: string): "optional" | "included" {
+  return config.legalProtection.optionalActivityIds.includes(activityId) ? "optional" : "included";
+}
+
+/**
+ * Montant de PJ ajouté au budget. Excel : =IF($B$8="Oui",$E$8,0) pour une activité à PJ optionnelle ;
+ * toujours le prix de la PJ pour une activité à PJ incluse ; 0 si la PJ est désactivée dans l'administration.
+ */
+export function resolveLegalProtection(
+  config: PricingConfig,
+  activityId: string,
+  includeIfOptional: boolean,
+): { mode: "optional" | "included"; included: boolean; amount: number } {
+  const mode = getLegalProtectionMode(config, activityId);
+  const included = config.legalProtection.enabled && (mode === "included" || includeIfOptional);
+  return { mode, included, amount: included ? config.legalProtection.price : 0 };
 }
 
 /** Excel : =SUM(prime, PJ, courtage). */

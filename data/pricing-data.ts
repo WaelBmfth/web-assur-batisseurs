@@ -16,6 +16,28 @@ import type { PricingConfig } from "@/types/pricing";
  * celle enregistrée depuis /admin (voir lib/pricing/repository.ts). Ne pas
  * modifier les tarifs ailleurs que dans ce fichier ou dans l'administration.
  */
+/**
+ * Activités pour lesquelles la Protection Juridique reste optionnelle (choix à l'étape 3).
+ * Pour toutes les autres, la PJ est incluse d'office dans la prime.
+ * Correspondance avec la liste de la cliente :
+ *   Gros œuvre : Étanchéité              → etancheite-seul
+ *   Fumisterie                           → fumisterie-seul
+ *   Photovoltaïque                       → photovoltaique-seul
+ *   Architecte d'intérieur (sans suivi)  → architecte-d-interieur-sans-structure-seul
+ *   Maître d'œuvre                       → maitre-d-oeuvre-seul
+ *   Architecte d'intérieur (avec suivi)  → architecte-avec-suivi-de-travaux-seul
+ *   Paysagiste                           → paysagiste-seul
+ */
+export const defaultOptionalLegalProtectionActivityIds = [
+  "etancheite-seul",
+  "fumisterie-seul",
+  "photovoltaique-seul",
+  "architecte-d-interieur-sans-structure-seul",
+  "maitre-d-oeuvre-seul",
+  "architecte-avec-suivi-de-travaux-seul",
+  "paysagiste-seul",
+];
+
 export const defaultPricingConfig: PricingConfig = {
   version: 1,
   updatedAt: "2026-10-21T00:00:00.000Z",
@@ -27,6 +49,7 @@ export const defaultPricingConfig: PricingConfig = {
   legalProtection: {
     enabled: true,
     price: 296,
+    optionalActivityIds: defaultOptionalLegalProtectionActivityIds,
   },
   activities: [
   {

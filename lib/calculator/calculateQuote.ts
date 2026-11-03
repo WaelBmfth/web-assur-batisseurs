@@ -5,7 +5,7 @@ import {
   findActivity,
   findBracket,
   getCoveredRevenueRange,
-  resolveLegalProtectionAmount,
+  resolveLegalProtection,
   resolvePremiumRange,
   roundCurrency,
   toMonthly,
@@ -92,7 +92,8 @@ export function calculateQuote(input: QuoteInput, config: PricingConfig): QuoteR
 
   const { bracket } = lookup;
   const insurance = resolvePremiumRange(bracket);
-  const legalProtection = resolveLegalProtectionAmount(config, input.includeLegalProtection);
+  // Une seule fois par période (prime + PJ + courtage) : pas de double comptage.
+  const legalProtection = resolveLegalProtection(config, activity.id, input.includeLegalProtection);
   const { year1, followingYears } = config.brokerageFees;
   const installments = config.installmentsPerYear;
 
@@ -102,12 +103,10 @@ export function calculateQuote(input: QuoteInput, config: PricingConfig): QuoteR
     bracket,
     revenue: input.revenue,
     insurance,
-    legalProtection: {
-      included: input.includeLegalProtection && config.legalProtection.enabled,
-      amount: legalProtection,
-    },
-    year1: periodTotals(insurance, legalProtection, year1, installments),
-    followingYears: periodTotals(insurance, legalProtection, followingYears, installments),
+    legalProtection,
+    insuranceWithLegalProtection: addToRange(insurance, legalProtection.amount),
+    year1: periodTotals(insurance, legalProtection.amount, year1, installments),
+    followingYears: periodTotals(insurance, legalProtection.amount, followingYears, installments),
     brokerageSavings: roundCurrency(year1 - followingYears),
     installmentsPerYear: installments,
     pricingVersion: config.version,

@@ -55,5 +55,10 @@ export const simulatorSteps: SimulatorStep[] = [
   },
 ];
 
-/** Nombre d'étapes de saisie (l'estimation n'est pas comptée : « Étape 1 sur 4 »). */
-export const inputStepCount = simulatorSteps.filter((s) => s.id !== "result").length;
+/**
+ * Étapes affichées : l'étape « Vos options » (Protection Juridique) n'existe que pour
+ * les activités où la PJ est optionnelle (voir getLegalProtectionMode).
+ */
+export function getSimulatorSteps(withLegalProtectionStep: boolean): SimulatorStep[] {
+  return withLegalProtectionStep ? simulatorSteps : simulatorSteps.filter((s) => s.id !== "options");
+}

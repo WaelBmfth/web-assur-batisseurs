@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { defaultOptionalLegalProtectionActivityIds } from "@/data/pricing-data";
 import type { PricingConfig } from "@/types/pricing";
 
 const amount = z.number().finite().nonnegative();
@@ -35,7 +36,12 @@ export const pricingConfigSchema = z
     updatedAt: z.string(),
     installmentsPerYear: z.number().int().positive(),
     brokerageFees: z.object({ year1: amount, followingYears: amount }),
-    legalProtection: z.object({ enabled: z.boolean(), price: amount }),
+    legalProtection: z.object({
+      enabled: z.boolean(),
+      price: amount,
+      // Grilles enregistrées avant l'ajout de ce champ : liste par défaut (aucune réécriture des données).
+      optionalActivityIds: z.array(z.string()).default(() => [...defaultOptionalLegalProtectionActivityIds]),
+    }),
     activities: z.array(activitySchema),
   })
   .superRefine((config, ctx) => {

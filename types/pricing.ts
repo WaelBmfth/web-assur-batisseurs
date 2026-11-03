@@ -39,10 +39,15 @@ export type BrokerageFees = {
 };
 
 export type LegalProtectionSettings = {
-  /** Option proposée dans le simulateur. */
+  /** Protection Juridique proposée dans le simulateur. */
   enabled: boolean;
-  /** Prix annuel TTC de l'option (€). */
+  /** Prix annuel TTC de la Protection Juridique (€). */
   price: number;
+  /**
+   * Activités pour lesquelles la PJ est une option au choix du client (étape « Vos options »).
+   * Pour toutes les autres activités, la PJ est incluse d'office dans la prime.
+   */
+  optionalActivityIds: string[];
 };
 
 export type PricingConfig = {
