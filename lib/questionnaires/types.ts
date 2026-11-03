@@ -14,7 +14,8 @@ export type SimulatorSnapshot = {
   activityId: string;
   /** Chiffre d'affaires prévisionnel (€ HT). */
   revenue: number;
-  includeLegalProtection: boolean;
+  /** PJ retenue ; `null` si la question n'a pas encore été posée (ex. CA hors grille à l'étape 2). */
+  includeLegalProtection: boolean | null;
   companyName: string;
 };
 

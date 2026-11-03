@@ -1,6 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { SectionHeading } from "@/components/site/SectionHeading";
@@ -9,7 +10,12 @@ import { ArrowBadge, Icon } from "@/components/ui/Icon";
 import { calculateQuote, getLegalProtectionMode, getSelectableActivities } from "@/lib/calculator";
 import { cn } from "@/lib/cn";
 import { parseAmount } from "@/lib/format";
-import { buildStudyRequestHref, STUDY_REQUEST_PATH } from "@/lib/questionnaires/simulatorSnapshot";
+import {
+  buildStudyRequestHref,
+  CHOOSE_QUESTIONNAIRE,
+  STUDY_REQUEST_PATH,
+  type QuestionnaireRequest,
+} from "@/lib/questionnaires/simulatorSnapshot";
 import type { SimulatorSnapshot } from "@/lib/questionnaires/types";
 import { emptySimulatorForm, simulatorFormSchema, type SimulatorFormValues } from "@/lib/simulator/formSchema";
 import { getSimulatorSteps, type SimulatorStep } from "@/lib/simulator/steps";
@@ -33,7 +39,11 @@ export type QuoteSimulatorProps = {
   /** Appelé quand l'utilisateur affiche son estimation (ex. : enregistrement d'un lead). */
   onQuote?: (submission: QuoteSubmission) => void;
   /** Lien du bouton « Demander une étude personnalisée » (par défaut : page questionnaire, simulation conservée). */
-  studyRequestHref?: (simulation: SimulatorSnapshot) => string;
+  /**
+   * Lien vers la demande d'étude (par défaut : page questionnaire, simulation conservée).
+   * `questionnaire` vaut « choisir » quand le CA dépasse la grille : affichage du choix des 3 questionnaires.
+   */
+  studyRequestHref?: (simulation: SimulatorSnapshot, questionnaire?: QuestionnaireRequest) => string;
   /** Masque la barre de progression pleine largeur (intégration dans un bloc existant). */
   hideProgress?: boolean;
 };
@@ -50,6 +60,9 @@ export function QuoteSimulator({
   hideProgress = false,
 }: QuoteSimulatorProps) {
   const [stepId, setStepId] = useState<SimulatorStep["id"]>("activity");
+  // Le visiteur a validé l'étape PJ (sinon son choix n'est pas transmis : il n'a pas été posé).
+  const [legalProtectionAnswered, setLegalProtectionAnswered] = useState(false);
+  const router = useRouter();
   const headingRef = useRef<HTMLDivElement>(null);
   const hasNavigated = useRef(false);
 
@@ -119,6 +132,24 @@ export function QuoteSimulator({
 
   async function next() {
     if (!(await trigger(step.fields, { shouldFocus: true }))) return;
+    // CA au-delà du plafond de la grille pour cette activité (250 000 € pour la plupart) :
+    // pas d'estimation possible, accès direct au choix des 3 questionnaires.
+    if (step.id === "revenue" && quote && !quote.ok && quote.code === "REVENUE_ABOVE_RANGE") {
+      router.push(
+        studyRequestHref(
+          {
+            activityId: values.activityId,
+            revenue,
+            includeLegalProtection:
+              legalProtectionMode === "included" ? true : legalProtectionAnswered ? values.legalProtection === "yes" : null,
+            companyName: values.companyName ?? "",
+          },
+          CHOOSE_QUESTIONNAIRE,
+        ),
+      );
+      return;
+    }
+    if (step.id === "options") setLegalProtectionAnswered(true);
     goTo(stepIndex + 1);
   }
 
@@ -137,6 +168,7 @@ export function QuoteSimulator({
 
   function restart() {
     reset(emptySimulatorForm);
+    setLegalProtectionAnswered(false);
     goTo(0);
   }
 

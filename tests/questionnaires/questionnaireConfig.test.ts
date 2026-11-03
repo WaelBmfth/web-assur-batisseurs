@@ -44,6 +44,14 @@ describe("Transmission de la simulation par l'URL", () => {
     expect(parseSimulatorSnapshot(toParams(href))).toEqual(simulation);
   });
 
+  it("conserve une PJ non encore renseignée (CA hors grille à l'étape 2) sans inventer de réponse", () => {
+    const early: SimulatorSnapshot = { activityId: "plomberie-seul", revenue: 2_000_000, includeLegalProtection: null, companyName: "" };
+    const href = buildStudyRequestHref(early, CHOOSE_QUESTIONNAIRE);
+    expect(toParams(href)).toEqual({ activite: "plomberie-seul", ca: "2000000", questionnaire: "choisir" });
+    expect(parseSimulatorSnapshot(toParams(href))).toEqual(early);
+    expect(parseRequestedQuestionnaire(toParams(href))).toBe(CHOOSE_QUESTIONNAIRE);
+  });
+
   it("transmet un questionnaire demandé explicitement, ou le choix", () => {
     expect(parseRequestedQuestionnaire(toParams(buildStudyRequestHref(simulation, "do")))).toBe("do");
     expect(parseRequestedQuestionnaire(toParams(questionnaireHref(CHOOSE_QUESTIONNAIRE, simulation)))).toBe(CHOOSE_QUESTIONNAIRE);

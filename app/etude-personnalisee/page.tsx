@@ -35,7 +35,11 @@ export default async function StudyRequestPage({ searchParams }: Props) {
   const quote =
     simulation && pricingConfig
       ? calculateQuote(
-          { activityId: simulation.activityId, revenue: simulation.revenue, includeLegalProtection: simulation.includeLegalProtection },
+          {
+            activityId: simulation.activityId,
+            revenue: simulation.revenue,
+            includeLegalProtection: simulation.includeLegalProtection ?? false,
+          },
           pricingConfig,
         )
       : null;

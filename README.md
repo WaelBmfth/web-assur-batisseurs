@@ -244,6 +244,10 @@ Simulateur ── choix (activité, CA, PJ, raison sociale) dans l'URL ──▶
   qui lit la table `questionnaireRulesByActivity` (identifiant d'activité → `"artisans" | "do" | "rcd-pib"`).
   Tant qu'une activité n'y figure pas, la page propose au visiteur de choisir parmi les trois fiches.
   Le paramètre `?questionnaire=artisans|do|rcd-pib` force une fiche, `?questionnaire=choisir` affiche le choix.
+- **CA au-delà de la grille** : à l'étape 2, si le CA dépasse le plafond de l'activité (250 000 €, 50 000 € pour
+  « Électricien seul » ; détecté par `calculateQuote` → `REVENUE_ABOVE_RANGE`), l'avertissement s'affiche et
+  « Suivant » mène directement au choix des 3 questionnaires (`?questionnaire=choisir`), simulation conservée.
+  La PJ n'est transmise que si elle est connue (incluse d'office, ou déjà choisie à l'étape 3).
 - **Données de simulation** : transmises par l'URL (`lib/questionnaires/simulatorSnapshot.ts`), rappelées en haut
   de page et reprises dans la fiche (raison sociale, CA prévisionnel). Rien n'est perdu au rechargement.
 - **Champs et listes** : les options (40 activités, activités PIB, garanties DO…) sont des données

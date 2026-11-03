@@ -21,9 +21,11 @@ export function SimulationSummary({
           {simulation.companyName && <Badge tone="neutral">{simulation.companyName}</Badge>}
           {activityName && <Badge tone="gold">{activityName}</Badge>}
           <Badge tone="neutral">CA {formatEuro(simulation.revenue, { decimals: false })} HT</Badge>
-          <Badge tone={simulation.includeLegalProtection ? "success" : "neutral"}>
-            PJ : {simulation.includeLegalProtection ? "Oui" : "Non"}
-          </Badge>
+          {simulation.includeLegalProtection !== null && (
+            <Badge tone={simulation.includeLegalProtection ? "success" : "neutral"}>
+              PJ : {simulation.includeLegalProtection ? "Oui" : "Non"}
+            </Badge>
+          )}
         </div>
       </div>
       {quote?.ok && (

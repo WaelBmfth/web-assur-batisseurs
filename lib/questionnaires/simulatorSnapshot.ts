@@ -23,8 +23,10 @@ export function buildStudyRequestHref(snapshot: SimulatorSnapshot, questionnaire
   const search = new URLSearchParams({
     [params.activityId]: snapshot.activityId,
     [params.revenue]: String(snapshot.revenue),
-    [params.includeLegalProtection]: snapshot.includeLegalProtection ? "oui" : "non",
   });
+  if (snapshot.includeLegalProtection !== null) {
+    search.set(params.includeLegalProtection, snapshot.includeLegalProtection ? "oui" : "non");
+  }
   if (snapshot.companyName.trim()) search.set(params.companyName, snapshot.companyName.trim());
   if (questionnaire) search.set(params.questionnaire, questionnaire);
   return `${STUDY_REQUEST_PATH}?${search.toString()}`;
@@ -37,7 +39,11 @@ const first = (value: string | string[] | undefined) => (Array.isArray(value) ? 
 const snapshotSchema = z.object({
   activityId: z.string().trim().min(1).max(200),
   revenue: z.coerce.number().finite().positive(),
-  includeLegalProtection: z.enum(["oui", "non"]).transform((v) => v === "oui"),
+  // Absent : PJ pas encore renseignée.
+  includeLegalProtection: z
+    .enum(["oui", "non"])
+    .optional()
+    .transform((v) => (v === undefined ? null : v === "oui")),
   companyName: z.string().trim().max(200).default(""),
 });
 
