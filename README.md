@@ -248,6 +248,10 @@ Simulateur ── choix (activité, CA, PJ, raison sociale) dans l'URL ──▶
   « Électricien seul » ; détecté par `calculateQuote` → `REVENUE_ABOVE_RANGE`), l'avertissement s'affiche et
   « Suivant » mène directement au choix des 3 questionnaires (`?questionnaire=choisir`), simulation conservée.
   La PJ n'est transmise que si elle est connue (incluse d'office, ou déjà choisie à l'étape 3).
+  Avant la redirection, les réponses sont écrites dans l'URL de la page du simulateur
+  (`?activite=…&ca=…&reprise=chiffre-affaires`, `lib/simulator/resumeState.ts`) : le bouton Retour du navigateur
+  rouvre l'étape 2 avec l'activité, le CA, la PJ et la raison sociale. « Nouvelle simulation » efface ces paramètres.
+  `QuoteSimulator` lit l'URL avec `useSearchParams` : dans une page statique, l'entourer d'un `<Suspense>`.
 - **Données de simulation** : transmises par l'URL (`lib/questionnaires/simulatorSnapshot.ts`), rappelées en haut
   de page et reprises dans la fiche (raison sociale, CA prévisionnel). Rien n'est perdu au rechargement.
 - **Champs et listes** : les options (40 activités, activités PIB, garanties DO…) sont des données

@@ -1,15 +1,15 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { SectionHeading } from "@/components/site/SectionHeading";
 import { Button } from "@/components/ui/Button";
 import { ArrowBadge, Icon } from "@/components/ui/Icon";
-import { calculateQuote, getLegalProtectionMode, getSelectableActivities } from "@/lib/calculator";
+import { calculateQuote, findActivity, getLegalProtectionMode, getSelectableActivities } from "@/lib/calculator";
 import { cn } from "@/lib/cn";
-import { parseAmount } from "@/lib/format";
+import { formatNumber, parseAmount } from "@/lib/format";
 import {
   buildStudyRequestHref,
   CHOOSE_QUESTIONNAIRE,
@@ -18,6 +18,7 @@ import {
 } from "@/lib/questionnaires/simulatorSnapshot";
 import type { SimulatorSnapshot } from "@/lib/questionnaires/types";
 import { emptySimulatorForm, simulatorFormSchema, type SimulatorFormValues } from "@/lib/simulator/formSchema";
+import { buildResumeSearch, parseResumeState } from "@/lib/simulator/resumeState";
 import { getSimulatorSteps, type SimulatorStep } from "@/lib/simulator/steps";
 import type { PricingConfig } from "@/types/pricing";
 import type { QuoteResult } from "@/types/simulator";
@@ -59,9 +60,21 @@ export function QuoteSimulator({
   studyRequestHref = buildStudyRequestHref,
   hideProgress = false,
 }: QuoteSimulatorProps) {
-  const [stepId, setStepId] = useState<SimulatorStep["id"]>("activity");
+  // Retour navigateur après la redirection « CA au-delà de la grille » : l'URL décrit la simulation,
+  // qui reprend à l'étape 2 avec ses réponses (lu au premier rendu, identique côté serveur et client).
+  const searchParams = useSearchParams();
+  const [resume] = useState(() => {
+    const state = parseResumeState(searchParams.toString());
+    return state && findActivity(pricingConfig, state.activityId)?.active ? state : null;
+  });
+  const [stepId, setStepId] = useState<SimulatorStep["id"]>(resume ? "revenue" : "activity");
   // Le visiteur a validé l'étape PJ (sinon son choix n'est pas transmis : il n'a pas été posé).
-  const [legalProtectionAnswered, setLegalProtectionAnswered] = useState(false);
+  const [legalProtectionAnswered, setLegalProtectionAnswered] = useState(
+    () =>
+      resume !== null &&
+      resume.includeLegalProtection !== null &&
+      getLegalProtectionMode(pricingConfig, resume.activityId) === "optional",
+  );
   const router = useRouter();
   const headingRef = useRef<HTMLDivElement>(null);
   const hasNavigated = useRef(false);
@@ -76,7 +89,15 @@ export function QuoteSimulator({
     formState: { errors },
   } = useForm<SimulatorFormValues>({
     resolver: zodResolver(simulatorFormSchema),
-    defaultValues: emptySimulatorForm,
+    defaultValues: resume
+      ? {
+          ...emptySimulatorForm,
+          activityId: resume.activityId,
+          revenue: formatNumber(resume.revenue),
+          legalProtection: resume.includeLegalProtection === false ? "no" : "yes",
+          companyName: resume.companyName,
+        }
+      : emptySimulatorForm,
     // Revalidation immédiate : l'erreur disparaît dès la correction (pas de décalage du bouton au clic).
     mode: "onChange",
   });
@@ -135,18 +156,17 @@ export function QuoteSimulator({
     // CA au-delà du plafond de la grille pour cette activité (250 000 € pour la plupart) :
     // pas d'estimation possible, accès direct au choix des 3 questionnaires.
     if (step.id === "revenue" && quote && !quote.ok && quote.code === "REVENUE_ABOVE_RANGE") {
-      router.push(
-        studyRequestHref(
-          {
-            activityId: values.activityId,
-            revenue,
-            includeLegalProtection:
-              legalProtectionMode === "included" ? true : legalProtectionAnswered ? values.legalProtection === "yes" : null,
-            companyName: values.companyName ?? "",
-          },
-          CHOOSE_QUESTIONNAIRE,
-        ),
-      );
+      const simulation: SimulatorSnapshot = {
+        activityId: values.activityId,
+        revenue,
+        includeLegalProtection:
+          legalProtectionMode === "included" ? true : legalProtectionAnswered ? values.legalProtection === "yes" : null,
+        companyName: values.companyName ?? "",
+      };
+      // L'entrée d'historique courante garde les réponses : le bouton Retour rouvre l'étape 2 complétée.
+      const { pathname, hash } = window.location;
+      window.history.replaceState(window.history.state, "", `${pathname}${buildResumeSearch(simulation)}${hash}`);
+      router.push(studyRequestHref(simulation, CHOOSE_QUESTIONNAIRE));
       return;
     }
     if (step.id === "options") setLegalProtectionAnswered(true);
@@ -169,6 +189,10 @@ export function QuoteSimulator({
   function restart() {
     reset(emptySimulatorForm);
     setLegalProtectionAnswered(false);
+    // Nouvelle simulation : l'URL ne décrit plus la simulation précédente.
+    if (parseResumeState(window.location.search)) {
+      window.history.replaceState(window.history.state, "", `${window.location.pathname}${window.location.hash}`);
+    }
     goTo(0);
   }
 
