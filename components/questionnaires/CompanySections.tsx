@@ -54,7 +54,10 @@ export function CompanyIdentificationSection({ variant }: { variant: Variant }) 
 export function ActivityCharacteristicsSection({ variant }: { variant: Variant }) {
   const artisans = variant === "artisans";
   return (
-    <QuestionnaireSection number={2} title="Caractéristiques & répartition de l'activité">
+    <QuestionnaireSection
+      number={2}
+      title={artisans ? "Caractéristiques & répartition de l'activité" : "Caractéristiques et répartition de l'activité"}
+    >
       <RadioGroupField name="activity.largestSiteCost" legend="Coût du plus gros chantier" options={largestSiteCosts} />
       {artisans && <RadioGroupField name="activity.managerTakesPart" legend="Le gérant participe-t-il aux travaux ?" options={yesNo} />}
 

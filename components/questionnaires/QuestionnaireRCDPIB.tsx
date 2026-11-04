@@ -3,7 +3,6 @@
 import { rcdPibDefaults } from "@/lib/questionnaires/defaults";
 import { missionTypeShares, pibActivities, workTypeShares, yesNo } from "@/lib/questionnaires/options";
 import { rcdPibSchema } from "@/lib/questionnaires/schemas";
-import { submitQuestionnaire } from "@/lib/questionnaires/submitQuestionnaire";
 import type { SimulatorSnapshot } from "@/lib/questionnaires/types";
 import { ClaimsTable } from "./ClaimsTable";
 import { ActivityCharacteristicsSection, CompanyIdentificationSection } from "./CompanySections";
@@ -17,9 +16,10 @@ import { SignatureFields } from "./SignatureFields";
 export function QuestionnaireRCDPIB({ simulation }: { simulation: SimulatorSnapshot | null }) {
   return (
     <QuestionnaireForm
+      type="rcd-pib"
+      simulation={simulation}
       schema={rcdPibSchema}
       defaultValues={rcdPibDefaults(simulation)}
-      onSubmit={(data) => submitQuestionnaire({ type: "rcd-pib", data, simulation })}
     >
       <CompanyIdentificationSection variant="rcd-pib" />
       <ActivityCharacteristicsSection variant="rcd-pib" />

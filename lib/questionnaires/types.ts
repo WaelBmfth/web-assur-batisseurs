@@ -27,8 +27,3 @@ export type RCDPIBQuestionnaireData = z.output<typeof rcdPibSchema>;
 export type ArtisansQuestionnaireValues = z.input<typeof artisansSchema>;
 export type DOQuestionnaireValues = z.input<typeof doSchema>;
 export type RCDPIBQuestionnaireValues = z.input<typeof rcdPibSchema>;
-
-export type QuestionnaireSubmission =
-  | { type: "artisans"; data: ArtisansQuestionnaireData; simulation: SimulatorSnapshot | null }
-  | { type: "do"; data: DOQuestionnaireData; simulation: SimulatorSnapshot | null }
-  | { type: "rcd-pib"; data: RCDPIBQuestionnaireData; simulation: SimulatorSnapshot | null };
