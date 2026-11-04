@@ -41,8 +41,11 @@ est indiqué entre parenthèses : il peut être ajusté sans toucher aux composa
 
 ## Parcours & design
 
-- [ ] Où envoyer les questionnaires remplis (e-mail au cabinet, CRM, outil de tarification…) ?
-  _(Actuel : le bouton « Demander une étude personnalisée » ouvre le questionnaire ; l'envoi n'est pas branché, l'écran final invite à appeler le cabinet.)_
+- [ ] Le cabinet doit-il recevoir une copie de chaque questionnaire (et à quelle adresse) ?
+  _(Actuel : le PDF est envoyé au client ; copie au cabinet possible via `QUESTIONNAIRE_EMAIL_BCC`, à configurer.)_
+- [ ] Adresse d'expédition des e-mails (ex. questionnaires@assurbatisseurs.fr) : le domaine doit être vérifié chez Resend (enregistrements DNS).
+- [ ] Durée de conservation des questionnaires enregistrés (données personnelles, RGPD) et mention d'information à afficher sous le formulaire.
+- [ ] Faut-il une protection anti-robot (captcha) sur l'envoi des questionnaires ? Aujourd'hui toute personne peut déclencher un e-mail vers l'adresse qu'elle saisit.
 - [ ] FAQ « Combien coûte… » : la réponse indique une prime « à partir de 750,00 € TTC par an », mais la grille tarifaire du simulateur démarre à 444 € (13 activités, fiche Excel). Un visiteur peut donc obtenir une estimation inférieure au montant annoncé dans la FAQ : est-ce voulu ?
   _(Actuel : la FAQ affiche 750,00 € comme demandé ; la grille et le calcul ne sont volontairement pas modifiés.)_
 - [ ] Adresse e-mail de contact à afficher dans le pied de page (« [À compléter : e-mail] » sur la maquette). Les fiches de pré-tarification indiquent `contact@assurbatisseurs.fr` : est-ce bien celle-ci ?

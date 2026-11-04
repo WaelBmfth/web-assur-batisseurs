@@ -11,7 +11,6 @@ import {
   yesNo,
 } from "@/lib/questionnaires/options";
 import { doSchema } from "@/lib/questionnaires/schemas";
-import { submitQuestionnaire } from "@/lib/questionnaires/submitQuestionnaire";
 import type { SimulatorSnapshot } from "@/lib/questionnaires/types";
 import {
   CheckboxGroupField,
@@ -30,7 +29,7 @@ import { SignatureFields } from "./SignatureFields";
 /** Fiche préta DO (Dommages Ouvrage). */
 export function QuestionnaireDO({ simulation }: { simulation: SimulatorSnapshot | null }) {
   return (
-    <QuestionnaireForm schema={doSchema} defaultValues={doDefaults()} onSubmit={(data) => submitQuestionnaire({ type: "do", data, simulation })}>
+    <QuestionnaireForm type="do" simulation={simulation} schema={doSchema} defaultValues={doDefaults()}>
       <QuestionnaireSection title="Garanties souhaitées">
         <CheckboxGroupField name="guarantees" legend="Garanties souhaitées" options={doGuarantees} required columns="sm:grid-cols-2" />
       </QuestionnaireSection>

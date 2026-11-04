@@ -7,22 +7,48 @@ import type { z } from "zod";
 import { Button, ButtonLink } from "@/components/ui/Button";
 import { ArrowBadge, Icon } from "@/components/ui/Icon";
 import { contact } from "@/config/site-content";
-import type { SubmitResult } from "@/lib/questionnaires/submitQuestionnaire";
-
-type Status = { kind: "idle" } | { kind: "success"; delivered: boolean } | { kind: "error"; message: string };
+import { clearSubmission, saveSubmission, useStoredSubmission } from "@/lib/questionnaires/submissionSession";
+import { submitQuestionnaire, type SubmissionSuccess } from "@/lib/questionnaires/submitQuestionnaire";
+import type { QuestionnaireType, SimulatorSnapshot } from "@/lib/questionnaires/types";
 
 type Props<Input extends FieldValues, Output> = {
+  type: QuestionnaireType;
+  simulation: SimulatorSnapshot | null;
   schema: z.ZodType<Output, Input>;
   defaultValues: Input;
-  onSubmit: (data: Output) => Promise<SubmitResult>;
   children: ReactNode;
 };
 
+/** Identifiant de soumission (UUID v4), aussi lorsque crypto.randomUUID est indisponible (HTTP local). */
+function newSubmissionId(): string {
+  if (typeof crypto.randomUUID === "function") return crypto.randomUUID();
+  const b = crypto.getRandomValues(new Uint8Array(16));
+  b[6] = (b[6]! & 0x0f) | 0x40;
+  b[8] = (b[8]! & 0x3f) | 0x80;
+  const h = [...b].map((x) => x.toString(16).padStart(2, "0")).join("");
+  return `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`;
+}
+
+/** Téléchargement du PDF renvoyé par le serveur (aucune nouvelle saisie ni nouvel envoi). */
+function downloadPdf(pdf: SubmissionSuccess["pdf"]) {
+  const bytes = Uint8Array.from(atob(pdf.base64), (c) => c.charCodeAt(0));
+  const url = URL.createObjectURL(new Blob([bytes], { type: "application/pdf" }));
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = pdf.filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 10_000);
+}
+
 /**
  * Enveloppe commune des questionnaires : formulaire react-hook-form validé par
- * le schéma Zod de la fiche, récapitulatif d'erreurs, envoi et état de succès.
+ * le schéma Zod de la fiche, envoi au serveur (PDF + e-mail), confirmation et
+ * téléchargement du PDF. Un même identifiant de soumission est réutilisé pour
+ * l'onglet : double clic, nouvel essai ou rechargement n'envoient pas de second e-mail.
  */
-export function QuestionnaireForm<Input extends FieldValues, Output>({ schema, defaultValues, onSubmit, children }: Props<Input, Output>) {
+export function QuestionnaireForm<Input extends FieldValues, Output>({ type, simulation, schema, defaultValues, children }: Props<Input, Output>) {
   const methods = useForm<Input, unknown, Output>({
     resolver: zodResolver(schema),
     defaultValues: defaultValues as DefaultValues<Input>,
@@ -30,51 +56,81 @@ export function QuestionnaireForm<Input extends FieldValues, Output>({ schema, d
     mode: "onSubmit",
     reValidateMode: "onChange",
   });
-  const [status, setStatus] = useState<Status>({ kind: "idle" });
+  const stored = useStoredSubmission(type);
+  const [error, setError] = useState<{ message: string; details?: string[] } | null>(null);
   const successRef = useRef<HTMLDivElement>(null);
+  // Garde synchrone : un double clic déclenche deux soumissions avant le rendu suivant ;
+  // la seconde est ignorée et l'identifiant est fixé une fois pour toutes.
+  const inFlight = useRef(false);
+  const submissionIdRef = useRef<string | null>(null);
   const { errors, isSubmitting, submitCount } = methods.formState;
   const errorCount = countErrors(errors);
+  const result = stored?.result;
 
-  async function onValid(data: Output) {
+  async function onValid() {
+    if (inFlight.current) return;
+    inFlight.current = true;
+    setError(null);
     try {
-      const result = await onSubmit(data);
-      setStatus({ kind: "success", delivered: result.delivered });
-    } catch {
-      setStatus({ kind: "error", message: "L'envoi n'a pas abouti. Merci de réessayer dans quelques instants." });
+      submissionIdRef.current ??= stored?.submissionId ?? newSubmissionId();
+      const submissionId = submissionIdRef.current;
+      saveSubmission(type, { submissionId });
+      const response = await submitQuestionnaire({ submissionId, type, values: methods.getValues(), simulation });
+      if (response.ok) saveSubmission(type, { submissionId, result: response });
+      else setError({ message: response.message, details: response.errors });
+    } finally {
+      inFlight.current = false;
     }
   }
 
-  // Accessibilité : le message de succès reçoit le focus et passe à l'écran.
+  function startOver() {
+    submissionIdRef.current = null;
+    clearSubmission(type);
+    methods.reset(defaultValues as DefaultValues<Input>);
+    setError(null);
+  }
+
+  // Accessibilité : la confirmation reçoit le focus et passe à l'écran.
   useEffect(() => {
-    if (status.kind !== "success") return;
+    if (!result) return;
     successRef.current?.focus();
     successRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-  }, [status.kind]);
+  }, [result]);
 
-  if (status.kind === "success") {
+  if (result) {
     return (
       <div ref={successRef} tabIndex={-1} role="status" className="scroll-mt-6 rounded-2xl border border-line border-t-[3px] border-t-ink bg-surface p-7 text-center focus:outline-none sm:p-10">
         <span className="mx-auto flex size-14 items-center justify-center rounded-full bg-success-100 text-success-700">
           <Icon name="check" className="size-7" />
         </span>
-        <h2 className="mt-5 text-2xl font-bold text-ink">Merci, votre questionnaire est complet</h2>
+        <h2 className="mt-5 text-2xl font-bold text-ink">Merci, votre questionnaire a bien été envoyé</h2>
         <p className="mx-auto mt-3 max-w-xl text-ink-muted">
-          Un conseiller AssurBâtisseurs étudiera votre dossier et reviendra vers vous avec une proposition adaptée.
+          Un e-mail de confirmation, avec le PDF de vos réponses en pièce jointe, a été envoyé à{" "}
+          <strong className="break-all text-ink">{result.emailSentTo}</strong>.
         </p>
-        {!status.delivered && (
-          <p className="mx-auto mt-5 max-w-xl rounded-xl border border-accent-400/60 bg-warning-100 px-4 py-3 text-sm text-warning-800">
-            L&apos;envoi en ligne n&apos;est pas encore activé : pour transmettre votre demande dès maintenant, appelez-nous au{" "}
-            <a href={contact.phoneHref} className="font-semibold underline">
-              {contact.phone}
-            </a>
-            .
-          </p>
-        )}
-        <div className="mt-7 flex flex-col justify-center gap-3 sm:flex-row">
+        <p className="mx-auto mt-2 max-w-xl text-sm text-ink-muted">
+          Référence de votre demande : <strong className="text-ink">{result.reference}</strong>. Un conseiller AssurBâtisseurs
+          reviendra vers vous avec une proposition adaptée.
+        </p>
+        <div className="mt-7 flex flex-col items-center justify-center gap-3 sm:flex-row">
+          <Button size="lg" className="pr-2" onClick={() => downloadPdf(result.pdf)}>
+            Télécharger le PDF de mes réponses
+            <ArrowBadge />
+          </Button>
           <ButtonLink href="/" variant="secondary" size="lg">
             Retour au simulateur
           </ButtonLink>
         </div>
+        <button type="button" onClick={startOver} className="mt-5 rounded text-sm font-semibold text-ink-muted underline-offset-2 hover:text-ink hover:underline">
+          Remplir un nouveau questionnaire
+        </button>
+        <p className="mt-6 text-xs text-ink-subtle">
+          E-mail non reçu ? Vérifiez vos courriers indésirables ou appelez-nous au{" "}
+          <a href={contact.phoneHref} className="font-semibold">
+            {contact.phone}
+          </a>
+          .
+        </p>
       </div>
     );
   }
@@ -93,18 +149,29 @@ export function QuestionnaireForm<Input extends FieldValues, Output>({ schema, d
                   ? "1 champ est à corriger avant l'envoi."
                   : `${errorCount} champs sont à corriger avant l'envoi.`}
               </p>
-            ) : status.kind === "error" ? (
-              <p role="alert" className="font-semibold text-danger-700">
-                {status.message}
-              </p>
+            ) : error ? (
+              <div role="alert" className="text-danger-700">
+                <p className="flex items-start gap-2 font-semibold">
+                  <Icon name="alert" className="mt-0.5 size-4 shrink-0" />
+                  {error.message}
+                </p>
+                {error.details && error.details.length > 0 && (
+                  <ul className="mt-1 list-disc pl-10 text-xs">
+                    {error.details.slice(0, 5).map((d) => (
+                      <li key={d}>{d}</li>
+                    ))}
+                  </ul>
+                )}
+              </div>
             ) : (
               <p>
-                Les champs marqués d&apos;un <span className="text-danger-700">*</span> sont obligatoires.
+                Les champs marqués d&apos;un <span className="text-danger-700">*</span> sont obligatoires. Vous recevrez le PDF de vos
+                réponses par e-mail.
               </p>
             )}
           </div>
-          <Button type="submit" size="lg" disabled={isSubmitting} className="w-full pr-2 sm:w-auto">
-            {isSubmitting ? "Envoi…" : "Envoyer ma demande d'étude"}
+          <Button type="submit" size="lg" disabled={isSubmitting} aria-busy={isSubmitting} className="w-full shrink-0 pr-2 sm:w-auto">
+            {isSubmitting ? "Envoi en cours…" : "Envoyer ma demande d'étude"}
             <ArrowBadge />
           </Button>
         </div>

@@ -3,7 +3,6 @@
 import { artisansDefaults } from "@/lib/questionnaires/defaults";
 import { artisanActivities, yesNo } from "@/lib/questionnaires/options";
 import { artisansSchema } from "@/lib/questionnaires/schemas";
-import { submitQuestionnaire } from "@/lib/questionnaires/submitQuestionnaire";
 import type { SimulatorSnapshot } from "@/lib/questionnaires/types";
 import { ClaimsTable } from "./ClaimsTable";
 import { ActivityCharacteristicsSection, CompanyIdentificationSection } from "./CompanySections";
@@ -17,9 +16,10 @@ import { SignatureFields } from "./SignatureFields";
 export function QuestionnaireArtisans({ simulation }: { simulation: SimulatorSnapshot | null }) {
   return (
     <QuestionnaireForm
+      type="artisans"
+      simulation={simulation}
       schema={artisansSchema}
       defaultValues={artisansDefaults(simulation)}
-      onSubmit={(data) => submitQuestionnaire({ type: "artisans", data, simulation })}
     >
       <CompanyIdentificationSection variant="artisans" />
       <ActivityCharacteristicsSection variant="artisans" />

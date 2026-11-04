@@ -245,9 +245,34 @@ Simulateur ── choix (activité, CA, PJ, raison sociale) dans l'URL ──▶
 - **Validation** : schémas Zod par fiche (`lib/questionnaires/schemas.ts`) avec React Hook Form : champs obligatoires
   (coordonnées, activités, garanties), e-mail, téléphone, code postal, SIRET (14 chiffres), dates, nombres,
   pourcentages, totaux (« Total = 100% » de la fiche Artisans, totaux ≤ 100 % ailleurs).
-- **Envoi** : `submitQuestionnaire` (`lib/questionnaires/submitQuestionnaire.ts`) reçoit les données validées et typées.
-  **Aucune API n'est encore branchée** : la fonction ne transmet rien et l'écran de succès invite à appeler le cabinet.
-  Pour brancher l'API, remplacer le corps de cette fonction et renvoyer `{ delivered: true }`.
+- **Envoi, PDF et e-mail** (`POST /api/questionnaires`, côté serveur uniquement) :
+  1. les réponses sont revalidées avec le schéma Zod de la fiche (rien n'est fait confiance au navigateur) ;
+  2. un PDF est généré (`lib/pdf/questionnairePdf.ts`, bibliothèque `pdf-lib`) à partir du document
+     `lib/questionnaires/document.ts` : logo, titre, date, demandeur, simulation d'origine, toutes les sections et
+     questions de la fiche (« Non renseigné » si vide), pages multiples, réponses longues, caractères français ;
+  3. le PDF est envoyé **en pièce jointe** au demandeur (adresse saisie dans le questionnaire) avec un e-mail de
+     confirmation en français (`lib/questionnaires/confirmationEmail.ts`), via **Resend** (API REST, sans dépendance) ;
+  4. le navigateur reçoit le PDF : l'écran de confirmation propose de le télécharger.
+
+  Aucun succès n'est affiché si la validation, le PDF ou l'e-mail échoue. Chaque soumission porte un identifiant
+  (`submissionId`) : double clic, nouvel essai ou rechargement n'envoient jamais un second e-mail (verrou dans
+  `lib/questionnaires/submissionStore.server.ts` — Vercel Blob en production, fichiers en local —, clé
+  d'idempotence Resend, garde côté formulaire).
+
+### Configuration de l'envoi (Vercel → Settings → Environment Variables)
+
+| Variable | Obligatoire | Rôle |
+| --- | --- | --- |
+| `RESEND_API_KEY` | oui | Clé d'API Resend (secret, jamais exposée au navigateur). |
+| `QUESTIONNAIRE_EMAIL_FROM` | oui | Expéditeur sur un **domaine vérifié dans Resend**, ex. `AssurBâtisseurs <questionnaires@assurbatisseurs.fr>`. |
+| `QUESTIONNAIRE_EMAIL_BCC` | conseillé | Copie cachée au cabinet (sinon seul le client reçoit le PDF). Plusieurs adresses : séparées par des virgules. |
+| `QUESTIONNAIRE_EMAIL_REPLY_TO` | facultatif | Adresse de réponse, ex. `contact@assurbatisseurs.fr`. |
+| `QUESTIONNAIRE_EMAIL_REDIRECT_TO` | Preview | **Adresse de test** : tous les e-mails y partent au lieu du client. À définir pour l'environnement *Preview* uniquement. |
+| `QUESTIONNAIRE_EMAIL_TRANSPORT=outbox` | développement | Aucun envoi : chaque e-mail et son PDF sont écrits dans `storage/outbox/` (refusé sur Vercel). |
+| `BLOB_READ_WRITE_TOKEN` | production | Déjà utilisé par l'administration : sert aussi au verrou anti-doublon des soumissions. |
+
+Sans `RESEND_API_KEY` / `QUESTIONNAIRE_EMAIL_FROM`, le formulaire affiche « L'envoi en ligne est momentanément
+indisponible » et rien n'est envoyé. Modèle de configuration : `.env.example`.
 
 ## Design
 
