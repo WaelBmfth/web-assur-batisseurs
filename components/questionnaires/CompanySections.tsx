@@ -64,17 +64,17 @@ export function ActivityCharacteristicsSection({ variant }: { variant: Variant }
       <SubHeading
         note={
           artisans
-            ? "Total = 100 % : Particuliers + Professionnels = 100 % et Rénovation + Neuf = 100 %."
+            ? "Obligatoire — Particuliers + Professionnels = 100 % et Rénovation + Neuf = 100 %. Une part laissée vide compte pour 0 %."
             : "Chaque répartition (Particuliers / Professionnels, Rénovation / Neuf) ne peut pas dépasser 100 %."
         }
       >
         {artisans ? "Répartition du CA (Total = 100%)" : "Répartition du Chiffre d'Affaires"}
       </SubHeading>
       <FieldGrid>
-        <NumberField name="activity.privateShare" label="Part Particuliers" suffix="%" required={artisans} />
-        <NumberField name="activity.professionalShare" label="Part Professionnels" suffix="%" required={artisans} />
-        <NumberField name="activity.renovationShare" label="Part Rénovation" suffix="%" required={artisans} />
-        <NumberField name="activity.newBuildShare" label="Part Neuf" suffix="%" required={artisans} />
+        <NumberField name="activity.privateShare" label="Part Particuliers" suffix="%" />
+        <NumberField name="activity.professionalShare" label="Part Professionnels" suffix="%" />
+        <NumberField name="activity.renovationShare" label="Part Rénovation" suffix="%" />
+        <NumberField name="activity.newBuildShare" label="Part Neuf" suffix="%" />
       </FieldGrid>
 
       <SubHeading>{artisans ? "Sous-traitance (Total = 100%)" : "Sous-traitance"}</SubHeading>

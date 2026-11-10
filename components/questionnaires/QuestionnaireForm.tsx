@@ -162,6 +162,13 @@ export function QuestionnaireForm<Input extends FieldValues, Output>({ type, sim
                     ))}
                   </ul>
                 )}
+                <p className="mt-1 pl-6 text-ink-muted">
+                  Vous pouvez aussi transmettre votre demande par téléphone au{" "}
+                  <a href={contact.phoneHref} className="font-semibold whitespace-nowrap text-ink underline">
+                    {contact.phone}
+                  </a>
+                  .
+                </p>
               </div>
             ) : (
               <p>

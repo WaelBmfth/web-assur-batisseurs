@@ -293,6 +293,7 @@ export async function renderQuestionnairePdf(doc: QuestionnaireDocument): Promis
   pdf.setCreator("AssurBâtisseurs — simulateur en ligne");
   pdf.setLanguage("fr-FR");
   pdf.setCreationDate(doc.submittedAt);
+  pdf.setModificationDate(doc.submittedAt);
 
   const fonts: Fonts = {
     regular: await pdf.embedFont(StandardFonts.Helvetica),

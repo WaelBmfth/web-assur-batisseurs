@@ -48,6 +48,30 @@ describe("Fiche Artisans", () => {
     );
   });
 
+  it("accepte une part laissée vide quand l'autre vaut 100 % (cas Démolition : 100 % particuliers, 100 % rénovation)", () => {
+    const v = validArtisans();
+    Object.assign(v.activity, { privateShare: "100", professionalShare: "", renovationShare: "100", newBuildShare: "" });
+    const result = artisansSchema.safeParse(v);
+    expect(messages(result)).toEqual([]);
+    expect(result.data!.activity).toMatchObject({ privateShare: 100, professionalShare: 0, renovationShare: 100, newBuildShare: 0 });
+  });
+
+  it("demande la répartition quand les deux parts d'un axe sont vides", () => {
+    const v = validArtisans();
+    Object.assign(v.activity, { privateShare: "", professionalShare: "" });
+    expect(messages(artisansSchema.safeParse(v))).toEqual([
+      "activity.privateShare: Indiquez la répartition : Particuliers + Professionnels = 100 %.",
+    ]);
+  });
+
+  it("refuse une part unique différente de 100 %", () => {
+    const v = validArtisans();
+    Object.assign(v.activity, { renovationShare: "80", newBuildShare: "" });
+    expect(messages(artisansSchema.safeParse(v))).toContain(
+      "activity.newBuildShare: Rénovation + Neuf doit totaliser 100 % (actuellement 80 %).",
+    );
+  });
+
   it("refuse une sous-traitance supérieure à 100 % au total", () => {
     const v = validArtisans();
     Object.assign(v.activity, { subcontractedShare: "70", asSubcontractorShare: "40" });

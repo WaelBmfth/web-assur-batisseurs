@@ -24,7 +24,6 @@ import {
   optionalSiret,
   optionalText,
   requiredEmail,
-  requiredPercent,
   requiredPhone,
   requiredText,
   sumPercents,
@@ -134,8 +133,12 @@ const companyIdentification = {
 const endAfterStart = "La date de fin doit être postérieure à la date d'effet.";
 
 /** Section 2 commune : répartition du CA et sous-traitance. */
-const revenueSplitFields = (required: boolean) => {
-  const percent = required ? requiredPercent("Indiquez un pourcentage.") : optionalPercent();
+/**
+ * Parts du CA : chaque champ est facultatif individuellement ; le total par axe est
+ * contrôlé ensuite (une part laissée vide compte pour 0 %).
+ */
+const revenueSplitFields = () => {
+  const percent = optionalPercent();
   return { privateShare: percent, professionalShare: percent, renovationShare: percent, newBuildShare: percent };
 };
 
@@ -163,6 +166,10 @@ function checkRevenueSplit(data: SplitValues, ctx: z.RefinementCtx, mustTotal100
   ] as const;
   for (const [a, b, label] of pairs) {
     const sum = total(data[a], data[b]);
+    if (mustTotal100 && data[a] === null && data[b] === null) {
+      ctx.addIssue({ code: "custom", path: [a], message: `Indiquez la répartition : ${label} = 100 %.` });
+      continue;
+    }
     if (mustTotal100 ? sum !== 100 : sum > 100) {
       ctx.addIssue({
         code: "custom",
@@ -194,10 +201,18 @@ export const artisansSchema = z.object({
     .object({
       largestSiteCost: optionalChoice(optionValues(largestSiteCosts)),
       managerTakesPart: optionalChoice(yesNoValues),
-      ...revenueSplitFields(true),
+      ...revenueSplitFields(),
       ...subcontractingFields,
     })
-    .superRefine((data, ctx) => checkRevenueSplit(data, ctx, true)),
+    .superRefine((data, ctx) => checkRevenueSplit(data, ctx, true))
+    // Axe complet (total = 100 %) : la part laissée vide vaut 0 % (PDF et données sans « Non renseigné »).
+    .transform((data) => ({
+      ...data,
+      privateShare: data.privateShare ?? 0,
+      professionalShare: data.professionalShare ?? 0,
+      renovationShare: data.renovationShare ?? 0,
+      newBuildShare: data.newBuildShare ?? 0,
+    })),
   activities: shareList({ atLeastOne: "Sélectionnez au moins une activité." }),
   claims: z.array(claimSchema),
   history: z.object({
@@ -287,7 +302,7 @@ export const rcdPibSchema = z.object({
   activity: z
     .object({
       largestSiteCost: optionalChoice(optionValues(largestSiteCosts)),
-      ...revenueSplitFields(false),
+      ...revenueSplitFields(),
       ...subcontractingFields,
     })
     .superRefine((data, ctx) => checkRevenueSplit(data, ctx, false)),
