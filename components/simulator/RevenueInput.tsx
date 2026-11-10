@@ -5,7 +5,7 @@ import { formatEuro, formatNumber, formatRevenueRange, parseAmount } from "@/lib
 import type { SimulatorFormValues } from "@/lib/simulator/formSchema";
 import type { Activity } from "@/types/pricing";
 import type { QuoteResult } from "@/types/simulator";
-import { getCoveredRevenueRange } from "@/lib/calculator";
+import { getCoveredRevenueRange, getRevenueExample } from "@/lib/calculator";
 
 type Props = {
   register: UseFormRegister<SimulatorFormValues>;
@@ -17,6 +17,8 @@ type Props = {
 
 export function RevenueInput({ register, error, activity, quote, onFormat }: Props) {
   const range = activity ? getCoveredRevenueRange(activity) : null;
+  // Exemple tiré de la grille de l'activité (toujours dans la plage couverte), présenté comme un exemple.
+  const example = activity ? getRevenueExample(activity) : null;
   const outOfRange = quote && !quote.ok && quote.code.startsWith("REVENUE_") ? quote : null;
   const field = register("revenue", {
     onBlur: (event: React.FocusEvent<HTMLInputElement>) => {
@@ -44,7 +46,7 @@ export function RevenueInput({ register, error, activity, quote, onFormat }: Pro
             {...field}
             inputMode="decimal"
             autoComplete="off"
-            placeholder="150 000"
+            placeholder={example !== null ? `Ex. : ${formatNumber(example)}` : undefined}
             suffix="€ HT"
             className="tabular text-lg font-semibold"
           />

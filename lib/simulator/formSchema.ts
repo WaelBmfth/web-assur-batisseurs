@@ -8,7 +8,8 @@ export const simulatorFormSchema = z.object({
   revenue: z
     .string()
     .trim()
-    .min(1, "Veuillez renseigner un chiffre d'affaires valide.")
+    // Champ vide : message dédié, sans les messages des vérifications suivantes.
+    .min(1, { error: "Veuillez saisir votre chiffre d'affaires.", abort: true })
     .refine((v) => Number.isFinite(parseAmount(v)), "Veuillez renseigner un chiffre d'affaires valide.")
     .refine((v) => parseAmount(v) > 0, "Le chiffre d'affaires doit être supérieur à 0 €."),
   legalProtection: z.enum(["yes", "no"], { message: "Veuillez indiquer votre choix." }),

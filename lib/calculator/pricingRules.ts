@@ -34,6 +34,21 @@ export function getCoveredRevenueRange(
   return { min: first.revenueMin, max };
 }
 
+/**
+ * Montant d'exemple (placeholder du CA) dans la grille de l'activité : 60 % du plafond,
+ * arrondi (150 000 € pour une grille de 0 à 250 000 €, 30 000 € pour 0 à 50 000 €).
+ * `null` si la grille n'a pas de plafond et ne permet pas d'en déduire un exemple.
+ */
+export function getRevenueExample(activity: Activity): number | null {
+  const range = getCoveredRevenueRange(activity);
+  if (!range) return null;
+  if (range.max === null) return range.min > 0 ? range.min : null;
+  const raw = range.max * 0.6;
+  const step = raw >= 10_000 ? 10_000 : raw >= 1_000 ? 1_000 : 100;
+  const example = Math.round(raw / step) * step;
+  return Math.min(range.max, Math.max(example, range.min, 1));
+}
+
 export type BracketLookup =
   | { found: true; bracket: PremiumBracket }
   | { found: false; reason: "below" | "above" | "gap" };

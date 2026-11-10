@@ -3,15 +3,18 @@
 import { useState } from "react";
 import { Card } from "@/components/ui/Card";
 import { inputClasses } from "@/components/ui/TextInput";
-import { calculateQuote, getSelectableActivities } from "@/lib/calculator";
-import { formatEuroRange, parseAmount } from "@/lib/format";
+import { calculateQuote, getRevenueExample, getSelectableActivities } from "@/lib/calculator";
+import { formatEuroRange, formatNumber, parseAmount } from "@/lib/format";
 import type { PricingConfig } from "@/types/pricing";
 
 /** Calcul de contrôle sur la configuration en cours d'édition (avant enregistrement). */
 export function QuotePreview({ draft }: { draft: PricingConfig }) {
   const activities = getSelectableActivities(draft);
   const [activityId, setActivityId] = useState(activities[0]?.id ?? "");
-  const [revenue, setRevenue] = useState("150 000");
+  const [revenue, setRevenue] = useState(() => {
+    const example = activities[0] ? getRevenueExample(activities[0]) : null;
+    return example !== null ? formatNumber(example) : "";
+  });
   const [withLp, setWithLp] = useState(true);
   const quote = calculateQuote(
     { activityId, revenue: parseAmount(revenue), includeLegalProtection: withLp },
